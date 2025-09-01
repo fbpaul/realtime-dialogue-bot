@@ -1,120 +1,171 @@
 <template>
   <div class="chat-app">
-    <!-- 頂部標題欄 -->
-    <div class="app-header">
-      <div class="user-info">
-        <div class="avatar">
-          <User :size="24" />
-        </div>
-        <div class="user-details">
-          <div class="user-name">智慧語音助手</div>
-          <div class="user-status">
-            <div class="status-dot" :class="{ 'online': allServicesOnline }"></div>
-            {{ allServicesOnline ? '已連線到後端 API' : '連線中...' }}
-          </div>
+    <!-- 側邊欄 -->
+    <div class="sidebar" :class="{ 'collapsed': sidebarCollapsed }">
+      <div class="sidebar-header">
+        <button 
+          class="sidebar-toggle"
+          @click="toggleSidebar"
+        >
+          <Menu :size="20" />
+        </button>
+        <div v-if="!sidebarCollapsed" class="logo">
+          <MessageCircle :size="24" />
+          <span>智慧語音助手</span>
         </div>
       </div>
-      <div class="header-tabs">
-        <div class="tab active">語音對話體驗</div>
-        <div class="tab">引導對話</div>
-        <div class="tab">進出端資方案</div>
-      </div>
-      <div class="header-actions">
+
+      <div v-if="!sidebarCollapsed" class="sidebar-content">
         <button 
           class="new-chat-btn"
           @click="startNewConversation"
           :disabled="isProcessing"
         >
-          <MessageCircle :size="16" />
+          <Plus :size="16" />
           新對話
         </button>
+
+        <div class="chat-history">
+          <div class="history-section">
+            <h3>今日</h3>
+            <div class="history-item active">
+              <MessageCircle :size="16" />
+              <span>語音對話體驗</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="status-section">
+            <h4>服務狀態</h4>
+            <div class="status-item">
+              <div class="status-dot" :class="{ 'online': sttStatus }"></div>
+              <span>語音轉文字 (STT)</span>
+            </div>
+            <div class="status-item">
+              <div class="status-dot" :class="{ 'online': llmStatus }"></div>
+              <span>語言模型 (LLM)</span>
+            </div>
+            <div class="status-item">
+              <div class="status-dot" :class="{ 'online': ttsStatus }"></div>
+              <span>文字轉語音 (TTS)</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- 聊天區域 -->
-    <div class="chat-container">
+    <!-- 主內容區域 -->
+    <div class="main-content" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
+      <!-- 聊天訊息區域 -->
       <div class="chat-messages" ref="chatMessagesRef">
         <div v-if="chatHistory.length === 0" class="welcome-message">
-          <MessageCircle :size="48" class="welcome-icon" />
-          <p>開始對話吧！</p>
+          <div class="welcome-content">
+            <MessageCircle :size="64" class="welcome-icon" />
+            <h2>歡迎使用智慧語音助手</h2>
+            <div class="feature-cards">
+              <div class="feature-card">
+                <Headphones :size="20" />
+                <span>語音識別</span>
+              </div>
+              <div class="feature-card">
+                <Brain :size="20" />
+                <span>智能對話</span>
+              </div>
+              <div class="feature-card">
+                <Volume2 :size="20" />
+                <span>語音回應</span>
+              </div>
+            </div>
+          </div>
         </div>
         
         <div 
           v-for="(message, index) in chatHistory" 
           :key="index" 
-          :class="['message-bubble', message.type === 'user' ? 'user-bubble' : 'assistant-bubble']"
+          class="message-wrapper"
         >
-          <div class="bubble-content">
-            <div class="message-text">
-              {{ message.text }}
-              <div v-if="message.isProcessing" class="processing-indicator">
-                <Loader2 :size="14" class="spinning" />
-              </div>
+          <div :class="['message', message.type]">
+            <div v-if="message.type === 'assistant'" class="message-avatar">
+              <Bot :size="20" />
             </div>
-            
-            <!-- 處理時間顯示 -->
-            <div v-if="message.processingTimes && !message.isProcessing" class="processing-times">
-              <div v-if="message.processingTimes.stt_time" class="time-item stt-time">
-                <Headphones :size="12" />
-                <span>STT: {{ message.processingTimes.stt_time }}ms</span>
+            <div class="message-content">
+              <div class="message-text">
+                {{ message.text }}
+                <div v-if="message.isProcessing" class="processing-indicator">
+                  <Loader2 :size="14" class="spinning" />
+                </div>
               </div>
-              <div v-if="message.processingTimes.llm_time" class="time-item llm-time">
-                <Brain :size="12" />
-                <span>LLM: {{ message.processingTimes.llm_time }}ms</span>
+              
+              <!-- 處理時間顯示 -->
+              <div v-if="message.processingTimes && !message.isProcessing" class="processing-times">
+                <div v-if="message.processingTimes.stt_time" class="time-item stt-time">
+                  <Headphones :size="12" />
+                  <span>STT: {{ message.processingTimes.stt_time }}ms</span>
+                </div>
+                <div v-if="message.processingTimes.llm_time" class="time-item llm-time">
+                  <Brain :size="12" />
+                  <span>LLM: {{ message.processingTimes.llm_time }}ms</span>
+                </div>
+                <div v-if="message.processingTimes.tts_time" class="time-item tts-time">
+                  <Volume2 :size="12" />
+                  <span>TTS: {{ message.processingTimes.tts_time }}ms</span>
+                </div>
+                <div v-if="message.processingTimes.total_time" class="time-item total-time">
+                  <Timer :size="12" />
+                  <span>總計: {{ message.processingTimes.total_time }}ms</span>
+                </div>
               </div>
-              <div v-if="message.processingTimes.tts_time" class="time-item tts-time">
-                <Volume2 :size="12" />
-                <span>TTS: {{ message.processingTimes.tts_time }}ms</span>
+              
+              <div class="message-time">
+                {{ formatTime(message.timestamp) }}
               </div>
-              <div v-if="message.processingTimes.total_time" class="time-item total-time">
-                <Timer :size="12" />
-                <span>總計: {{ message.processingTimes.total_time }}ms</span>
-              </div>
-            </div>
-            
-            <div class="message-time">
-              <Clock :size="12" />
-              {{ formatTime(message.timestamp) }}
             </div>
           </div>
           
           <div v-if="message.audioUrl && !message.isProcessing" class="audio-attachment">
-            <div class="audio-player">
-              <button class="play-btn" @click="playAudio(message.audioUrl)">
-                <Play :size="16" />
-              </button>
-              <div class="audio-info">語音訊息</div>
-            </div>
+            <button class="play-btn" @click="playAudio(message.audioUrl)">
+              <Play :size="16" />
+              <span>播放語音回應</span>
+            </button>
           </div>
         </div>
+
+        <!-- 底部間距 -->
+        <div class="chat-bottom-spacer"></div>
       </div>
-      
-      <!-- 底部輸入區域 -->
-      <div class="input-area">
-        <div class="input-container">
-          <div class="text-input">
-            <textarea 
-              v-model="inputText"
-              placeholder="請輸入您的問題..."
-              @keydown.enter.prevent="sendTextMessage"
-              :disabled="isProcessing"
-            ></textarea>
-          </div>
-          <div class="action-buttons">
-            <button 
-              class="send-btn"
-              @click="sendTextMessage"
-              :disabled="!inputText.trim() || isProcessing"
-            >
-              <Send :size="20" />
-            </button>
+    </div>
+
+    <!-- 懸浮輸入區域 -->
+    <div class="floating-input" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
+      <div class="input-container">
+        <div class="input-wrapper">
+          <textarea 
+            v-model="inputText"
+            placeholder="輸入訊息..."
+            @keydown.enter.prevent="sendTextMessage"
+            :disabled="isProcessing"
+            rows="1"
+            @input="adjustTextareaHeight"
+            ref="textareaRef"
+          ></textarea>
+          <div class="input-actions">
             <button 
               :class="['mic-btn', { 'recording': isRecording }]"
               @click="toggleRecording"
               :disabled="isProcessing && !isRecording"
+              :title="isRecording ? '停止錄音' : '開始語音輸入'"
             >
-              <Mic v-if="!isRecording" :size="24" />
-              <Square v-else :size="24" />
+              <Mic v-if="!isRecording" :size="20" />
+              <Square v-else :size="20" />
+            </button>
+            <button 
+              class="send-btn"
+              @click="sendTextMessage"
+              :disabled="!inputText.trim() || isProcessing"
+              title="發送訊息"
+            >
+              <Send :size="20" />
             </button>
           </div>
         </div>
@@ -148,7 +199,9 @@ import {
   Loader2,
   Headphones,
   Brain,
-  Volume2
+  Volume2,
+  Menu,
+  Plus
 } from 'lucide-vue-next'
 
 // 響應式數據
@@ -162,6 +215,8 @@ const inputText = ref('')
 const processingStatus = ref('')
 const chatHistory = reactive([])
 const chatMessagesRef = ref(null)
+const textareaRef = ref(null)
+const sidebarCollapsed = ref(false)
 
 // 計算屬性
 const allServicesOnline = computed(() => {
@@ -175,6 +230,19 @@ let recordingTimer = null
 
 // API 基礎 URL
 const API_BASE_URL = 'http://10.204.245.170:8945'
+
+// 側邊欄控制
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+}
+
+// 自動調整textarea高度
+const adjustTextareaHeight = () => {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+    textareaRef.value.style.height = Math.min(textareaRef.value.scrollHeight, 120) + 'px'
+  }
+}
 
 // 初始化
 onMounted(async () => {
@@ -378,6 +446,12 @@ const sendTextMessage = async () => {
 
   const userMessage = inputText.value.trim()
   inputText.value = ''
+  
+  // 重置textarea高度
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+  }
+  
   isProcessing.value = true
 
   // 添加用戶訊息
@@ -505,239 +579,305 @@ const formatDuration = (seconds) => {
 </script>
 
 <style scoped>
-/* 整體應用樣式 */
+/* 全局樣式 */
 .chat-app {
   height: 100vh;
   display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #f0f0f1 0%, #c0bcf5 100%);
+  background: #f7f7f8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
 }
 
-/* 頂部標題欄 */
-.app-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+/* 側邊欄樣式 */
+.sidebar {
+  width: 260px;
+  background: #171717;
+  border-right: 1px solid #404040;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  transition: all 0.3s ease;
   flex-shrink: 0;
-  height: 80px;
 }
 
-.user-info {
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid #404040;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: #e5e5e5;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
 }
 
-.user-details {
+.sidebar-toggle:hover {
+  background: #404040;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5e5e5;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.sidebar-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  padding: 16px;
+  gap: 16px;
+  overflow-y: auto;
 }
 
-.user-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.user-status {
+.new-chat-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 12px 16px;
+  background: none;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  color: #e5e5e5;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.new-chat-btn:hover:not(:disabled) {
+  background: #262626;
+  border-color: #525252;
+}
+
+.new-chat-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-history {
+  flex: 1;
+}
+
+.history-section h3 {
+  color: #a3a3a3;
   font-size: 12px;
-  color: #7f8c8d;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: #e5e5e5;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.history-item:hover {
+  background: #262626;
+}
+
+.history-item.active {
+  background: #404040;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #404040;
+  padding-top: 16px;
+}
+
+.status-section h4 {
+  color: #a3a3a3;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  color: #e5e5e5;
+  font-size: 12px;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #e74c3c;
+  background: #dc2626;
   transition: background-color 0.3s;
 }
 
 .status-dot.online {
-  background: #27ae60;
+  background: #16a34a;
 }
 
-.header-tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.tab {
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #7f8c8d;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.3s;
-}
-
-.tab.active {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
-  font-weight: 500;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.new-chat-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  background: white;
-  color: #495057;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.new-chat-btn:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-  transform: translateY(-1px);
-}
-
-.new-chat-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* 聊天容器 */
-.chat-container {
+/* 主內容區域 */
+.main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background: #f8f9fa;
-  margin: 16px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
   min-height: 0;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 0;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+.chat-bottom-spacer {
+  height: 120px;
+  flex-shrink: 0;
+}
+
+/* 歡迎消息 */
 .welcome-message {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  color: #d7dadd;
+  height: 60vh;
+  text-align: center;
+}
+
+.welcome-content {
+  max-width: 480px;
 }
 
 .welcome-icon {
-  margin-bottom: 16px;
-  opacity: 0.5;
+  color: #6b7280;
+  margin-bottom: 24px;
 }
 
-/* 訊息氣泡 */
-.message-bubble {
-  max-width: 70%;
-  margin-bottom: 16px;
+.welcome-content h2 {
+  color: #111827;
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0 0 32px 0;
 }
 
-.user-bubble {
-  align-self: flex-end;
-  margin-left: auto;
+.feature-cards {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
 }
 
-.assistant-bubble {
-  align-self: flex-start;
-}
-
-.bubble-content {
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
   background: white;
-  border-radius: 16px;
-  padding: 14px 18px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.feature-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 訊息樣式 */
+.message-wrapper {
+  margin-bottom: 24px;
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.message.user {
+  flex-direction: row-reverse;
+}
+
+.message.user .message-content {
+  background: #3b82f6;
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.message-content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  max-width: 70%;
   position: relative;
-}
-
-.user-bubble .bubble-content {
-  background: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #bbdefb;
-  border-bottom-right-radius: 4px;
-}
-
-.user-bubble .bubble-content::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: -8px;
-  width: 0;
-  height: 0;
-  border-left: 8px solid #e3f2fd;
-  border-bottom: 8px solid transparent;
-}
-
-.assistant-bubble .bubble-content {
-  background: #f5f5f5;
-  color: #424242;
-  border: 1px solid #e0e0e0;
-  border-bottom-left-radius: 4px;
-}
-
-.assistant-bubble .bubble-content::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: -8px;
-  width: 0;
-  height: 0;
-  border-right: 8px solid #f5f5f5;
-  border-bottom: 8px solid transparent;
 }
 
 .message-text {
-  font-size: 16px;
+  color: #111827;
+  font-size: 15px;
   line-height: 1.5;
   margin: 0;
-  position: relative;
+  word-wrap: break-word;
+}
+
+.message.user .message-text {
+  color: white;
 }
 
 .processing-indicator {
   display: inline-flex;
   align-items: center;
   margin-left: 8px;
-  color: #6c757d;
+  color: #6b7280;
 }
 
 .spinning {
@@ -755,197 +895,164 @@ const formatDuration = (seconds) => {
   gap: 6px;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .time-item {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
-  border-radius: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 500;
 }
 
-.stt-time {
-  background: #e8f5e8;
-  color: #2e7d32;
-}
-
-.llm-time {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.tts-time {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.total-time {
-  background: #f3e5f5;
-  color: #2c1fa2;
-  font-weight: 600;
-}
-
-.user-bubble .processing-times .time-item {
-  background: rgba(255, 255, 255, 0.7);
-  color: #1565c0;
-}
+.stt-time { background: #dcfce7; color: #166534; }
+.llm-time { background: #fef3c7; color: #92400e; }
+.tts-time { background: #dbeafe; color: #1e40af; }
+.total-time { background: #f3e8ff; color: #7c3aed; font-weight: 600; }
 
 .message-time {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   font-size: 12px;
-  opacity: 0.7;
-  margin-top: 6px;
+  color: #6b7280;
+  margin-top: 4px;
 }
 
-/* 音頻附件 */
 .audio-attachment {
   margin-top: 8px;
-}
-
-.audio-player {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 14px;
+  margin-left: 44px;
 }
 
 .play-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: #6c757d;
-  color: white;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s;
 }
 
 .play-btn:hover {
-  background: #5a6268;
+  background: #e5e7eb;
 }
 
-/* 底部輸入區域 */
-.input-area {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 16px 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0 0 16px 16px;
-  flex-shrink: 0;
+/* 懸浮輸入框 */
+.floating-input {
+  position: fixed;
+  bottom: 0;
+  left: 260px;
+  right: 0;
+  background: linear-gradient(transparent, #f7f7f8 20%);
+  padding: 0 24px 24px;
+  transition: left 0.3s ease;
+  z-index: 100;
+}
+
+.floating-input.sidebar-collapsed {
+  left: 60px;
 }
 
 .input-container {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.text-input {
-  flex: 1;
-}
-
-.text-input textarea {
-  width: 100%;
-  min-height: 48px;
-  max-height: 120px;
-  border: 2px solid #e9ecef;
-  border-radius: 24px;
+.input-wrapper {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   padding: 12px 16px;
-  font-size: 16px;
-  resize: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s;
+}
+
+.input-wrapper:focus-within {
+  border-color: #3b82f6;
+}
+
+.input-wrapper textarea {
+  flex: 1;
+  border: none;
   outline: none;
-  transition: border-color 0.3s;
+  resize: none;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #111827;
+  background: transparent;
   font-family: inherit;
+  min-height: 24px;
+  max-height: 120px;
 }
 
-.text-input textarea:focus {
-  border-color: #4facfe;
+.input-wrapper textarea::placeholder {
+  color: #9ca3af;
 }
 
-.action-buttons {
+.input-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.send-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+.mic-btn, .send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   border: none;
-  background: #4facfe;
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s;
-}
-
-.send-btn:hover:not(:disabled) {
-  background: #3b8bfe;
-  transform: scale(1.05);
-}
-
-.send-btn:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
+  transition: all 0.2s;
 }
 
 .mic-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  background: #4facfe;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .mic-btn:hover:not(:disabled) {
-  background: #3b8bfe;
-  transform: scale(1.05);
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .mic-btn.recording {
-  background: #e74c3c;
+  background: #dc2626;
+  color: white;
   animation: pulse 1.5s infinite;
 }
 
+.send-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.send-btn:disabled, .mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
-  }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* 錄音狀態 */
 .recording-status {
-  margin-top: 12px;
+  margin-top: 8px;
   display: flex;
   justify-content: center;
 }
@@ -954,18 +1061,18 @@ const formatDuration = (seconds) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: rgba(231, 76, 60, 0.1);
+  padding: 6px 12px;
+  background: rgba(220, 38, 38, 0.1);
   border-radius: 20px;
-  font-size: 14px;
-  color: #e74c3c;
+  font-size: 13px;
+  color: #dc2626;
 }
 
 .pulse-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #e74c3c;
+  background: #dc2626;
   animation: pulse-dot 1s infinite;
 }
 
@@ -976,40 +1083,32 @@ const formatDuration = (seconds) => {
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-  .app-header {
-    padding: 12px 16px;
-    flex-direction: column;
-    gap: 12px;
+  .sidebar {
+    width: 280px;
+    position: fixed;
+    left: -280px;
+    z-index: 200;
   }
   
-  .header-tabs {
-    order: -1;
-    width: 100%;
-    justify-content: center;
+  .sidebar.collapsed {
+    left: -280px;
   }
   
-  .tab {
-    flex: 1;
-    text-align: center;
-    font-size: 12px;
-    padding: 6px 8px;
+  .floating-input {
+    left: 0;
+    padding: 0 16px 16px;
   }
   
-  .chat-container {
-    margin: 0 8px;
+  .floating-input.sidebar-collapsed {
+    left: 0;
   }
   
-  .input-area {
-    padding: 12px 16px;
+  .chat-messages {
+    padding: 16px;
   }
   
-  .message-bubble {
+  .message-content {
     max-width: 85%;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    gap: 8px;
   }
 }
 </style>
