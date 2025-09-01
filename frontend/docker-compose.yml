@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  realtime-dialogue-frontend:
+    image: docker.io/library/node:22.15.1
+    container_name: realtime-dialogue-frontend
+    command: tail -f /dev/null
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /data/paul.fc.tsai_data:/app
+    working_dir: /app/realtime-dialogue/frontend
+    ports:
+      - "8946:8946"
+    restart: unless-stopped

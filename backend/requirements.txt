@@ -1,0 +1,16 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+faster-whisper
+torch
+torchaudio
+transformers
+numpy
+librosa
+soundfile
+pydub
+python-dotenv
+huggingface_hub
+openai
+PyYAML
+opencc-python-reimplemented

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8945:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    environment:
+      - PYTHONUTF8=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://10.204.245.170:8945/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
