@@ -229,7 +229,7 @@ let audioChunks = []
 let recordingTimer = null
 
 // API 基礎 URL
-const API_BASE_URL = 'http://10.204.245.170:8945'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // 側邊欄控制
 const toggleSidebar = () => {

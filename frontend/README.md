@@ -29,7 +29,7 @@ chmod +x start-frontend.sh
 ./start-frontend.sh
 ```
 
-### 方式二：Docker 直接運行（推薦）
+### 方式二：Docker 直接運行
 ```bash
 # 給腳本執行權限
 chmod +x start-frontend-docker.sh
@@ -38,7 +38,7 @@ chmod +x start-frontend-docker.sh
 ./start-frontend-docker.sh
 ```
 
-### 方式三：使用 Docker Compose（推薦）
+### 方式三：使用 Docker Compose
 ```bash
 # 給腳本執行權限
 chmod +x start-frontend-compose.sh
@@ -134,22 +134,11 @@ A: 請確認：
 
 詳細 API 文件請參考後端 README。
 
-## 🤝 貢獻指南
-
-1. Fork 這個專案
-2. 創建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟一個 Pull Request
-
 ## 📜 授權條款
 
 本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
 
 ## 👥 開發團隊
 
-- **主要開發者**: GitHub Copilot
+- **主要開發者**: paul.fc.tsai
 - **專案維護**: paul.fc.tsai
-
----
-🚀 **快樂編程！**

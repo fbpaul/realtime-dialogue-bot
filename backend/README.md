@@ -276,27 +276,11 @@ await tts_service.set_speaker_voices(
 )
 ```
 
-## 🤝 開發貢獻
+## 📜 授權條款
 
-1. Fork 此專案
-2. 建立功能分支：`git checkout -b feature/new-feature`
-3. 提交變更：`git commit -am 'Add new feature'`
-4. 推送到分支：`git push origin feature/new-feature`
-5. 建立 Pull Request
+本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
 
-## 📄 授權協議
+## 👥 開發團隊
 
-本專案採用 MIT 授權協議 - 詳見 [LICENSE](LICENSE) 檔案。
-
-## 🙏 致謝
-
-- **Faster-Whisper**: 語音識別模型
-- **Microsoft VibeVoice**: 高品質 TTS 模型
-- **FastAPI**: Web 框架
-- **PyTorch**: 深度學習框架
-
----
-
-**版本**: v1.0.0  
-**更新日期**: 2025-09-01  
-**維護者**: Paul FC Tsai
+- **主要開發者**: paul.fc.tsai
+- **專案維護**: paul.fc.tsai
