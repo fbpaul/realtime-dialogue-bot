@@ -915,7 +915,7 @@ const formatDuration = (seconds) => {
 
 .message-time {
   font-size: 12px;
-  color: #6b7280;
+  color: #d3d3dd;
   margin-top: 4px;
 }
 
