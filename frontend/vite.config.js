@@ -4,7 +4,7 @@ import { resolve } from 'path'
 
 // 從環境變數讀取
 const API_BASE_URL = process.env.VITE_API_BASE_URL
-const DEV_PORT = parseInt(process.env.VITE_DEV_PORT) || 3000
+const DEV_PORT = parseInt(process.env.VITE_DEV_PORT) || 8946
 
 
 export default defineConfig({

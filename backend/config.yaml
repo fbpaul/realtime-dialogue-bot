@@ -18,9 +18,9 @@ stt:
   device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   language: "zh"
   
-# TTS 配置 - 可選擇使用 breezy 或 vibe
+# TTS 配置 - 可選擇使用 breezy, vibe, 或 index
 tts:
-  provider: "vibe"  # 可選值: "breezy", "vibe"
+  provider: "index"  # 可選值: "breezy", "vibe", "index"
   device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   breezy:
@@ -28,32 +28,26 @@ tts:
     model_path: "./models/BreezyVoice"  # 使用實際的本地路徑
     model_repo: "MediaTek-Research/BreezyVoice-300M"
     breezy_voice_path: "/app/BreezyVoice"
-    device: "cuda:0"
+    device: "cuda:1"  # 可選值: "cuda:0", "cuda:1", "cpu"
+  
+  vibe:
+    enabled: true
+    model_path: "./models/VibeVoice"
+    model_repo: "Alibaba-NLP/VibeVoice"
+    device: "cuda:1"  # 可選值: "cuda:0", "cuda:1", "cpu"
+  
+  index:
+    enabled: true
+    model_dir: "./models/IndexTTS-1.5/"
+    cfg_path: "./models/IndexTTS-1.5/config.yaml"
+    device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
     # 預設參考語者設定
     default_speaker:
-      audio_path: "/app/BreezyVoice/data/example.wav"
-      transcription: "在密碼學中,加密是將明文資訊改變為難以讀取的密文內容,使之不可讀的方法。只有擁有解密方法的對象,經由解密過程才能將密文還原為正常可讀的內容。"  # 如果提供，可省去 ASR 時間
+      audio_path: "./voices/zh-IndexTTS_man.wav"  # 使用 voices 目錄中的中文語者
     # 語音合成參數
     synthesis:
       max_text_length: 500  # 最大文字長度
       timeout: 300  # 超時秒數
-      
-  vibe:
-    enabled: false
-    model_name: "microsoft/VibeVoice-1.5B"  # 或 "DevParker/VibeVoice7b-low-vram"
-    model_path: "./models/VibeVoice"  # 使用本地路徑
-    device: "cuda:0"
-    attention_type: "sdpa"  # sdpa 或 default
-    # 預設語者設定
-    default_speaker:
-      voices_dir: "./voices"
-      default_voice: "zh-Xinran_woman.wav"
-    # 語音合成參數
-    synthesis:
-      cfg_scale: 1.0
-      max_text_length: 150  # 超過此長度將分段處理
-      max_cache_size: 50
-      ddpm_steps: 10
 
 # LLM 聊天配置
 chat:
@@ -61,6 +55,7 @@ chat:
   model: "Qwen/Qwen2.5-1.5B"  # 使用本地模型
   model_path: "./models/models--Qwen--Qwen2.5-1.5B"  # 指向實際的模型路徑
   device: "cuda:0"  # LLM 使用 CUDA 0
+  llm_tools_device: "cuda:0"  # llm_tools 專用設備參數
   max_length: 512
   temperature: 0.7
   top_p: 0.9

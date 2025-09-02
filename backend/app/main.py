@@ -12,6 +12,7 @@ from typing import Optional, List
 from app.stt import STTService
 from app.tts_vibe import TTSVibeService
 from app.tts_breezy import TTSBreezyService
+from app.tts_index import TTSIndexService
 from app.chat import ChatService
 from app.config import config  # 導入配置管理
 
@@ -53,6 +54,9 @@ if tts_provider == "vibe" and config.is_service_enabled("tts"):
 elif tts_provider == "breezy" and config.is_service_enabled("tts"):
     tts_service = TTSBreezyService()
     print("使用 BreezyVoice TTS")
+elif tts_provider == "index" and config.is_service_enabled("tts"):
+    tts_service = TTSIndexService()
+    print("使用 IndexTTS")
 else:
     tts_service = None
     print("TTS 服務已停用")
@@ -103,6 +107,10 @@ async def startup_event():
                 speaker_names=speaker_names,
                 speaker_transcriptions=speaker_transcriptions
             )
+            
+        elif tts_provider == "index":
+            # IndexTTS 配置
+            await tts_service.initialize()
         
         print(f"{tts_provider.upper()} TTS 初始化完成")
     

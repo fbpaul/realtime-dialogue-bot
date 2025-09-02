@@ -126,7 +126,8 @@
           <div v-if="message.audioUrl && !message.isProcessing" class="audio-attachment">
             <button class="play-btn" @click="playAudio(message.audioUrl)">
               <Play :size="16" />
-              <span>播放語音回應</span>
+              <span v-if="message.type === 'user'">播放原始錄音</span>
+              <span v-else>播放語音回應</span>
             </button>
           </div>
         </div>
@@ -924,6 +925,14 @@ const formatDuration = (seconds) => {
   margin-left: 44px;
 }
 
+/* 用戶訊息的音頻附件靠右 */
+.message.user ~ .audio-attachment {
+  margin-left: 0;
+  margin-right: 44px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .play-btn {
   display: flex;
   align-items: center;
@@ -938,8 +947,20 @@ const formatDuration = (seconds) => {
   transition: all 0.2s;
 }
 
+/* 用戶訊息的播放按鈕樣式 */
+.message.user ~ .audio-attachment .play-btn {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
 .play-btn:hover {
   background: #e5e7eb;
+}
+
+/* 用戶訊息的播放按鈕 hover 效果 */
+.message.user ~ .audio-attachment .play-btn:hover {
+  background: #bfdbfe;
 }
 
 /* 懸浮輸入框 */
@@ -1109,6 +1130,15 @@ const formatDuration = (seconds) => {
   
   .message-content {
     max-width: 85%;
+  }
+  
+  .audio-attachment {
+    margin-left: 20px;
+  }
+  
+  .message.user ~ .audio-attachment {
+    margin-left: 0;
+    margin-right: 20px;
   }
 }
 </style>

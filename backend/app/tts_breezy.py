@@ -10,6 +10,7 @@ from huggingface_hub import snapshot_download
 import torch
 import torchaudio
 from app.config import config
+from app.config import config
 
 class TTSBreezyService:
     def __init__(self):
