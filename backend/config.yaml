@@ -1,0 +1,92 @@
+# Realtime Dialogue Bot 後端 API 配置文件
+api:
+  title: "Realtime Dialogue API"
+  version: "1.0.0"
+  host: "0.0.0.0"
+  port: 8000
+  cors:
+    allow_origins: ["*"]  # 生產環境請改為具體的前端網址
+    allow_credentials: true
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+# STT (語音轉文字) 配置
+stt:
+  enabled: true
+  model: "large-v3-turbo"  # 使用本地下載的模型
+  model_path: "./models"   # 指向 backend/models
+  device: "cuda:0"  # STT 使用 CUDA 0
+  language: "zh"
+  
+# TTS 配置 - 可選擇使用 breezy 或 vibe
+tts:
+  provider: "breezy"  # 可選值: "breezy", "vibe"
+  device: "cuda:1"  # TTS 使用 CUDA 1
+  
+  breezy:
+    enabled: true
+    model_path: "./models/BreezyVoice"  # 使用實際的本地路徑
+    model_repo: "MediaTek-Research/BreezyVoice-300M"
+    breezy_voice_path: "/app/BreezyVoice"
+    device: "cuda:1"  # BreezyVoice 使用 CUDA 1
+    # 預設參考語者設定
+    default_speaker:
+      audio_path: "/app/BreezyVoice/data/example.wav"
+      transcription: "在密碼學中,加密是將明文資訊改變為難以讀取的密文內容,使之不可讀的方法。只有擁有解密方法的對象,經由解密過程才能將密文還原為正常可讀的內容。"  # 如果提供，可省去 ASR 時間
+    # 語音合成參數
+    synthesis:
+      max_text_length: 500  # 最大文字長度
+      timeout: 300  # 超時秒數
+      
+  vibe:
+    enabled: true
+    model_name: "microsoft/VibeVoice-1.5B"  # 或 "DevParker/VibeVoice7b-low-vram"
+    model_path: "./models/VibeVoice"  # 使用本地路徑
+    device: "cuda:1"  # VibeVoice 使用 CUDA 1
+    attention_type: "sdpa"  # sdpa 或 default
+    # 預設語者設定
+    default_speaker:
+      voices_dir: "./voices"
+      default_voice: "zh-Xinran_woman.wav"
+    # 語音合成參數
+    synthesis:
+      cfg_scale: 1.0
+      max_text_length: 150  # 超過此長度將分段處理
+      max_cache_size: 50
+      ddpm_steps: 10
+
+# LLM 聊天配置
+chat:
+  enabled: true
+  model: "Qwen/Qwen2.5-1.5B"  # 使用本地模型
+  model_path: "./models/models--Qwen--Qwen2.5-1.5B"  # 指向實際的模型路徑
+  device: "cuda:0"  # LLM 使用 CUDA 0
+  max_length: 512
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
+  # 如果要使用 llm_tools 的配置，可以設定：
+  use_llm_tools: true  # 是否使用 llm_tools/configs/models.yaml
+  llm_tools_config: "./llm_tools/configs/models.yaml"
+  llm_tools_model: "Qwen2.5-32B-Instruct-GPTQ-Int4"  # llm_tools 中的模型名
+  llm_tools_device: "cuda:0"  # llm_tools 使用 CUDA 0
+
+# 檔案路徑配置
+paths:
+  uploads: "./uploads"
+  outputs: "./outputs"
+  voices: "./voices"
+  models: "./models"
+  temp: "./temp"
+
+# 記錄配置
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./logs/app.log"
+
+# 其他設定
+settings:
+  max_file_size: 50  # MB
+  allowed_audio_formats: [".wav", ".mp3", ".m4a", ".flac"]
+  allowed_text_length: 1000  # 最大文字長度

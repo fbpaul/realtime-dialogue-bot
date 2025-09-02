@@ -6,34 +6,62 @@ import numpy as np
 import soundfile as sf
 from typing import Optional, Union
 from opencc import OpenCC
+from app.config import config
 
 class STTService:
     def __init__(self):
         self.model = None
-        self.model_name = "large-v3-turbo"  # Faster-Whisper Large V3 turbo
+        # 從配置讀取，預設值
+        self.model_name = "large-v3-turbo"
         self.model_path = "./models"
+        self.device = "auto"  # 預設自動選擇
         self.converter = OpenCC('s2twp')
-    async def initialize(self):
-        """初始化 Faster-Whisper 模型"""
+        
+        # 從配置文件載入參數
+        self._load_config()
+    
+    def _load_config(self):
+        """從配置文件載入 STT 參數"""
+        stt_config = config.get_stt_config()
+        self.model_name = stt_config.get("model", self.model_name)
+        self.model_path = stt_config.get("model_path", self.model_path)
+        self.device = stt_config.get("device", self.device)
+        print(f"STT 配置載入: 模型={self.model_name}, 路徑={self.model_path}, 設備={self.device}")
+    
+    async def initialize(self, model_name: str = None, model_path: str = None):
+        """初始化 Faster-Whisper 模型
+        
+        Args:
+            model_name: 模型名稱（可從配置傳入）
+            model_path: 模型路徑（可從配置傳入）
+        """
+        # 更新配置參數
+        if model_name:
+            self.model_name = model_name
+        if model_path:
+            self.model_path = model_path
+            
         try:
             print(f"正在載入 Faster-Whisper {self.model_name} 模型...")
+            print(f"模型路徑: {self.model_path}")
+            
             # 使用 faster-whisper，支援 GPU 加速
             self.model = WhisperModel(
                 self.model_name,
-                download_root =self.model_path,
-                device="auto",  # 自動選擇 CPU 或 CUDA
+                download_root=self.model_path,
+                device=self.device,  # 使用配置中的設備參數
                 compute_type="auto"  # 自動選擇精度
             )
             print("Faster-Whisper 模型載入完成!")
         except Exception as e:
             print(f"Faster-Whisper {self.model_name} 模型載入失敗: {e}")
-            # 如果 large-v3 載入失敗，嘗試載入 base 模型
+            # 如果 large-v3-turbo 載入失敗，嘗試載入 base 模型
             try:
                 print("嘗試載入 base 模型...")
                 self.model = WhisperModel(
                     "base",
-                    download_root =self.model_path,
-                    device="auto",
+                    download_root=self.model_path,
+                    device=self.device,  # 使用配置中的設備參數
                     compute_type="auto"
                 )
                 self.model_name = "base"

@@ -4,6 +4,7 @@ import time
 from typing import Optional, List
 import torch
 from huggingface_hub import snapshot_download
+from app.config import config
 
 from vibevoice.modular.modeling_vibevoice_inference import VibeVoiceForConditionalGenerationInference
 from vibevoice.processor.vibevoice_processor import VibeVoiceProcessor
@@ -18,6 +19,16 @@ class TTSVibeService:
         self.model_path = "./models/VibeVoice"
         self.output_dir = "./outputs"
         self.uploads_dir = "./uploads"
+        
+        # 從配置文件載入參數
+        self._load_config()
+        
+    def _load_config(self):
+        """從配置文件載入 TTS Vibe 參數"""
+        tts_config = config.get_tts_config("vibe")
+        self.device = tts_config.get("device", "cuda:1" if torch.cuda.is_available() else "cpu")
+        print(f"TTS Vibe 配置載入: device={self.device}")
+        
         self.voices_dir = "./voices"
         
         # 語者管理 - 改為字典形式，支持快速查找和緩存
@@ -50,22 +61,28 @@ class TTSVibeService:
             
             # 載入模型
             print(f"載入模型從 {self.model_path}")
+            
+            # 將設備字符串轉換為適合的格式
+            device_map = 'cpu'
+            if "cuda" in self.device:
+                device_map = self.device
+            
             try:
                 # 首先嘗試不使用 flash attention
                 self.model = VibeVoiceForConditionalGenerationInference.from_pretrained(
                     self.model_path,
                     torch_dtype=torch.bfloat16,
-                    device_map='cuda' if torch.cuda.is_available() else 'cpu',
+                    device_map=device_map,
                     attn_implementation='sdpa'
                 )
-                print("使用 SDPA attention 載入模型成功")
+                print(f"使用 SDPA attention 載入模型成功 (設備: {device_map})")
             except Exception as e:
                 print(f"使用 SDPA attention 載入失敗，嘗試預設設定: {e}")
                 try:
                     self.model = VibeVoiceForConditionalGenerationInference.from_pretrained(
                         self.model_path,
                         torch_dtype=torch.bfloat16,
-                        device_map='cuda' if torch.cuda.is_available() else 'cpu'
+                        device_map=device_map
                     )
                     print("使用預設 attention 載入模型成功")
                 except Exception as e2:
@@ -308,9 +325,11 @@ class TTSVibeService:
             return_attention_mask=True,
         )
         
-        # 移動到 GPU（如果可用）
-        if torch.cuda.is_available():
-            inputs = {k: v.cuda() if hasattr(v, 'cuda') else v for k, v in inputs.items()}
+        # 移動到指定設備
+        target_device = self.device if "cuda" in self.device else "cpu"
+        if "cuda" in target_device:
+            device_obj = torch.device(target_device)
+            inputs = {k: v.to(device_obj) if hasattr(v, 'to') else v for k, v in inputs.items()}
         
         # 準備生成配置
         generation_config = {

@@ -1,6 +1,7 @@
 # folders
 repo_ref
 backend/models
+backend/G2PWModel
 
 # audio
 *.wav

@@ -27,7 +27,7 @@
 
         <div class="chat-history">
           <div class="history-section">
-            <h3>今日</h3>
+            <h3>功能列表</h3>
             <div class="history-item active">
               <MessageCircle :size="16" />
               <span>語音對話體驗</span>

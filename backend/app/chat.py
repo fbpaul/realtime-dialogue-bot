@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Dict, Optional
 import asyncio
+from app.config import config
 
 # 加入 llm_tools 路徑
 sys.path.append('/app/llm_tools')
@@ -12,24 +13,63 @@ class ChatService:
         # 儲存對話歷史（簡單版本，生產環境建議用資料庫）
         self.conversations: Dict[str, list] = {}
         self.llm_chat = None
+        self.use_llm_tools = True  # 預設使用 llm_tools
         
-    async def initialize_llm(self):
-        """初始化 LLM 聊天服務"""
+        # 從配置文件載入參數
+        self._load_config()
+    
+    def _load_config(self):
+        """從配置文件載入聊天服務參數"""
+        chat_config = config.get_chat_config()
+        self.use_llm_tools = chat_config.get("use_llm_tools", self.use_llm_tools)
+        self.device = chat_config.get("device", "auto")
+        self.llm_tools_device = chat_config.get("llm_tools_device", self.device)
+        print(f"Chat 配置載入: use_llm_tools={self.use_llm_tools}, device={self.device}, llm_tools_device={self.llm_tools_device}")
+        
+    async def initialize_llm(self, use_llm_tools: bool = None, 
+                           llm_tools_config: str = None, 
+                           llm_tools_model: str = None,
+                           local_model_path: str = None):
+        """初始化 LLM 聊天服務
+        
+        Args:
+            use_llm_tools: 是否使用 llm_tools 配置
+            llm_tools_config: llm_tools 配置檔案路徑
+            llm_tools_model: llm_tools 中的模型名稱
+            local_model_path: 本地模型路徑（如果不使用 llm_tools）
+        """
+        # 使用傳入參數或配置文件中的值
+        if use_llm_tools is not None:
+            self.use_llm_tools = use_llm_tools
+        
         try:
-            from llm_chat import LLMChat
-            
-            # 使用 Qwen2.5-32B-Instruct-GPTQ-Int4 模型
-            config_path = '/app/llm_tools/configs/models.yaml'
-            if not os.path.exists(config_path):
-                print("LLM 配置檔案不存在，使用簡單聊天模式")
-                return
+            if self.use_llm_tools:
+                # 使用 llm_tools 配置
+                from llm_chat import LLMChat
                 
-            self.llm_chat = LLMChat(
-                model='Qwen2.5-32B-Instruct-GPTQ-Int4', 
-                config_path=config_path
-            )
-            print("LLM 聊天服務初始化完成!")
+                # 從配置文件獲取參數
+                chat_config = config.get_chat_config()
+                config_path = llm_tools_config or chat_config.get("llm_tools_config", "/app/llm_tools/configs/models.yaml")
+                model_name = llm_tools_model or chat_config.get("llm_tools_model", "Qwen2.5-32B-Instruct-GPTQ-Int4")
+                
+                if not os.path.exists(config_path):
+                    print(f"LLM 配置檔案不存在: {config_path}")
+                    raise FileNotFoundError(f"配置檔案不存在: {config_path}")
+                    
+                self.llm_chat = LLMChat(
+                    model=model_name, 
+                    config_path=config_path,
+                    device=self.llm_tools_device  # 使用配置中的設備參數
+                )
+                print(f"LLM 聊天服務初始化完成! (使用 llm_tools, 模型: {model_name}, 設備: {self.llm_tools_device})")
             
+            else:
+                # 使用本地模型（可以在這裡實作本地模型載入）
+                print("本地模型模式尚未實作，改用 llm_tools")
+                await self.initialize_llm(use_llm_tools=True, 
+                                        llm_tools_config=llm_tools_config,
+                                        llm_tools_model=llm_tools_model)
+                
         except Exception as e:
             print(f"LLM 初始化失敗: {e}")
             print("將使用簡單聊天模式")
