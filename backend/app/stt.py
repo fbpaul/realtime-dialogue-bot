@@ -26,6 +26,8 @@ class STTService:
         self.model_name = stt_config.get("model", self.model_name)
         self.model_path = stt_config.get("model_path", self.model_path)
         self.device = stt_config.get("device", self.device)
+        self.device_name = 'cuda' if 'cuda' in self.device else 'cpu'
+        self.device_index = [int(self.device[-1])]
         print(f"STT 配置載入: 模型={self.model_name}, 路徑={self.model_path}, 設備={self.device}")
     
     async def initialize(self, model_name: str = None, model_path: str = None):
@@ -49,8 +51,9 @@ class STTService:
             self.model = WhisperModel(
                 self.model_name,
                 download_root=self.model_path,
-                device=self.device,  # 使用配置中的設備參數
-                compute_type="auto"  # 自動選擇精度
+                device=self.device_name,
+                device_index=self.device_index,
+                compute_type="auto"
             )
             print("Faster-Whisper 模型載入完成!")
         except Exception as e:
@@ -61,7 +64,8 @@ class STTService:
                 self.model = WhisperModel(
                     "base",
                     download_root=self.model_path,
-                    device=self.device,  # 使用配置中的設備參數
+                    device=self.device_name,
+                    device_index=self.device_index,
                     compute_type="auto"
                 )
                 self.model_name = "base"

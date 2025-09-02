@@ -334,7 +334,7 @@ class TTSVibeService:
         # 準備生成配置
         generation_config = {
             'do_sample': True,      # 使用採樣而非貪心搜索
-            'temperature': 0.1,    # 適中的隨機性
+            'temperature': 0.7,    # 適中的隨機性
             'top_p': 0.9,          # Nucleus sampling
         }
         

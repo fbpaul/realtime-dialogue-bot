@@ -15,20 +15,20 @@ stt:
   enabled: true
   model: "large-v3-turbo"  # 使用本地下載的模型
   model_path: "./models"   # 指向 backend/models
-  device: "cuda:0"  # STT 使用 CUDA 0
+  device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   language: "zh"
   
 # TTS 配置 - 可選擇使用 breezy 或 vibe
 tts:
-  provider: "breezy"  # 可選值: "breezy", "vibe"
-  device: "cuda:1"  # TTS 使用 CUDA 1
+  provider: "vibe"  # 可選值: "breezy", "vibe"
+  device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   breezy:
-    enabled: true
+    enabled: false
     model_path: "./models/BreezyVoice"  # 使用實際的本地路徑
     model_repo: "MediaTek-Research/BreezyVoice-300M"
     breezy_voice_path: "/app/BreezyVoice"
-    device: "cuda:1"  # BreezyVoice 使用 CUDA 1
+    device: "cuda:0"
     # 預設參考語者設定
     default_speaker:
       audio_path: "/app/BreezyVoice/data/example.wav"
@@ -39,10 +39,10 @@ tts:
       timeout: 300  # 超時秒數
       
   vibe:
-    enabled: true
+    enabled: false
     model_name: "microsoft/VibeVoice-1.5B"  # 或 "DevParker/VibeVoice7b-low-vram"
     model_path: "./models/VibeVoice"  # 使用本地路徑
-    device: "cuda:1"  # VibeVoice 使用 CUDA 1
+    device: "cuda:0"
     attention_type: "sdpa"  # sdpa 或 default
     # 預設語者設定
     default_speaker:
@@ -69,7 +69,6 @@ chat:
   use_llm_tools: true  # 是否使用 llm_tools/configs/models.yaml
   llm_tools_config: "./llm_tools/configs/models.yaml"
   llm_tools_model: "Qwen2.5-32B-Instruct-GPTQ-Int4"  # llm_tools 中的模型名
-  llm_tools_device: "cuda:0"  # llm_tools 使用 CUDA 0
 
 # 檔案路徑配置
 paths:

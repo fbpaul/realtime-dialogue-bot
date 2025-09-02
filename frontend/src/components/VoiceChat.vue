@@ -969,7 +969,7 @@ const formatDuration = (seconds) => {
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: border-color 0.2s;

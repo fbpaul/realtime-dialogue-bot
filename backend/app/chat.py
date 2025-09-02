@@ -59,7 +59,6 @@ class ChatService:
                 self.llm_chat = LLMChat(
                     model=model_name, 
                     config_path=config_path,
-                    device=self.llm_tools_device  # 使用配置中的設備參數
                 )
                 print(f"LLM 聊天服務初始化完成! (使用 llm_tools, 模型: {model_name}, 設備: {self.llm_tools_device})")
             
