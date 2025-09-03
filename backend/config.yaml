@@ -20,20 +20,20 @@ stt:
   
 # TTS 配置 - 可選擇使用 breezy, vibe, index, 或 spark
 tts:
-  provider: "spark"  # 可選值: "breezy", "vibe", "index", "spark"
+  provider: "index"  # 可選值: "breezy", "vibe", "index", "spark"
   device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   breezy:
     enabled: false
     model_path: "./models/BreezyVoice"  # 使用實際的本地路徑
-    model_repo: "MediaTek-Research/BreezyVoice-300M"
+    model_repo: "MediaTek-Research/BreezyVoice"
     breezy_voice_path: "/app/BreezyVoice"
     device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   vibe:
     enabled: true
     model_path: "./models/VibeVoice"
-    model_repo: "Alibaba-NLP/VibeVoice"
+    model_repo: "microsoft/VibeVoice-1.5B"
     device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   index:

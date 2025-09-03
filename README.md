@@ -221,18 +221,75 @@ chat:
 POST /stt
 Content-Type: multipart/form-data
 
-# 文字對話 (包含 TTS)
-POST /text_chat
+# 文字轉語音（支援語者克隆）
+POST /tts
 {
-  "message": "你好，今天天氣如何？"
+  "text": "要合成的文字",
+  "speaker_voice_path": "./voices/zh-CustomSpeaker.wav",  # 可選，語者克隆音檔路徑
+  "cfg_scale": 1.0  # 可選，僅 VibeVoice 使用
 }
 
-# 完整語音對話流程
+# 文字對話（包含 TTS 和語者克隆）
+POST /text_chat
+{
+  "message": "你好，今天天氣如何？",
+  "speaker_voice_path": "./voices/zh-CustomSpeaker.wav",  # 可選，語者克隆
+  "speaker_id": "zh-Novem_man",  # 可選，使用預設語者 ID
+  "use_voice_cloning": true,  # 可選，是否使用語者克隆（Spark-TTS）
+  "gender": "female",  # 可選，性別設定（Spark-TTS 語音控制模式）
+  "pitch": "high",     # 可選，音調設定（Spark-TTS 語音控制模式）
+  "speed": "moderate"  # 可選，語速設定（Spark-TTS 語音控制模式）
+}
+
+# 完整語音對話流程（支援語者克隆）
 POST /conversation
 Content-Type: multipart/form-data
+- audio_file: 用戶語音檔案
+- conversation_id: 對話 ID（可選）
+- speaker_voice_path: 語者克隆音檔路徑（可選）
+- speaker_id: 預設語者 ID（可選）
+
+# 獲取可用語者列表
+GET /speakers
 
 # 服務健康檢查
 GET /health/{service}  # stt, llm, tts
+```
+
+### 語者克隆使用示例
+
+```bash
+# 1. 獲取可用語者列表
+curl -X GET "http://localhost:8000/speakers"
+
+# 2. 使用語者克隆進行 TTS
+curl -X POST "http://localhost:8000/tts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "你好，這是語者克隆測試",
+    "speaker_voice_path": "./voices/zh-Novem_man.wav"
+  }' \
+  --output cloned_voice.wav
+
+# 3. 文字對話 + 語者克隆
+curl -X POST "http://localhost:8000/text_chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "告訴我關於人工智慧的歷史",
+    "speaker_voice_path": "./voices/zh-CustomSpeaker.wav",
+    "use_voice_cloning": true
+  }'
+
+# 4. Spark-TTS 語音控制模式
+curl -X POST "http://localhost:8000/text_chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "這是語音控制模式測試",
+    "use_voice_cloning": false,
+    "gender": "female",
+    "pitch": "high",
+    "speed": "moderate"
+  }'
 ```
 
 ### 回應格式
@@ -262,16 +319,32 @@ GET /health/{service}  # stt, llm, tts
 # 添加新語者到 voices/ 目錄
 cp your_voice.wav backend/voices/zh-CustomSpeaker.wav
 
-# 更新配置文件指向新語者
+# 通過 API 使用自定義語者進行語者克隆
+curl -X POST "http://localhost:8000/text_chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "使用自定義語者的測試",
+    "speaker_voice_path": "./voices/zh-CustomSpeaker.wav"
+  }'
 ```
+
+### 語者克隆最佳實踐
+1. **語者音檔品質**: 使用清晰、無背景噪音的 WAV 格式音檔
+2. **音檔長度**: 建議 3-10 秒，包含完整句子
+3. **語言一致性**: 語者音檔語言應與合成文字語言一致
+4. **引擎選擇**: 
+   - IndexTTS: 速度最快，適合即時應用
+   - VibeVoice: 品質較好但對音檔品質要求高
+   - Spark-TTS: 支援語者克隆和語音控制兩種模式
+   - BreezyVoice: 品質最佳但速度較慢
 
 ### 測試工具
 ```bash
-# 測試 TTS 引擎
-python test_indextts_return_type.py
+# 測試語者克隆功能
+python test_voice_cloning_api.py
 
-# 性能比較
-python tts_comparison.py
+# 測試 TTS 引擎性能比較
+python test_all_tts_engines.py
 
 # 組件測試  
 python test_components.py

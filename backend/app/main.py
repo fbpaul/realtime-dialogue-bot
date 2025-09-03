@@ -263,7 +263,26 @@ async def set_speakers(
 @app.get("/speaker_info")
 async def get_speaker_info():
     """取得目前使用的語者資訊"""
+    if not tts_service:
+        raise HTTPException(status_code=503, detail="TTS 服務未啟用")
     return tts_service.get_speaker_info()
+
+@app.get("/speakers")
+async def list_available_speakers():
+    """列出所有可用的語者"""
+    if not tts_service:
+        raise HTTPException(status_code=503, detail="TTS 服務未啟用")
+    
+    try:
+        speakers = tts_service.get_speaker_info()
+        return {
+            "success": True,
+            "tts_provider": tts_provider,
+            "speakers": speakers,
+            "count": len(speakers.get("speakers", [])) if isinstance(speakers, dict) else len(speakers)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"獲取語者列表失敗: {str(e)}")
 
 @app.post("/tts", summary="文字轉語音")
 async def text_to_speech(request: TTSRequest):
@@ -288,6 +307,19 @@ async def text_to_speech(request: TTSRequest):
             audio_data = await tts_service.synthesize(
                 text=request.text,
                 speaker_voice_path=request.speaker_voice_path
+            )
+        elif tts_provider == "index":
+            # IndexTTS 支援語者克隆
+            audio_data = await tts_service.synthesize(
+                text=request.text,
+                speaker_voice_path=request.speaker_voice_path
+            )
+        elif tts_provider == "spark":
+            # Spark-TTS 支援語者克隆和語音控制
+            audio_data = await tts_service.synthesize(
+                text=request.text,
+                speaker_voice_path=request.speaker_voice_path,
+                use_voice_cloning=True  # 預設使用語者克隆模式
             )
         else:
             raise HTTPException(status_code=500, detail=f"未支援的 TTS 提供者: {tts_provider}")
@@ -412,6 +444,13 @@ async def voice_chat(audio: UploadFile = File(...)):
 
 class TextChatRequest(BaseModel):
     message: str
+    speaker_voice_path: Optional[str] = Field(None, description="指定語者音檔路徑進行語音克隆")
+    speaker_id: Optional[str] = Field(None, description="使用預設語者ID")
+    # Spark-TTS 特殊參數
+    use_voice_cloning: Optional[bool] = Field(True, description="是否使用語者克隆模式（僅Spark-TTS）")
+    gender: Optional[str] = Field(None, description="性別設定（僅Spark-TTS語音控制模式）")
+    pitch: Optional[str] = Field(None, description="音調設定（僅Spark-TTS語音控制模式）")  
+    speed: Optional[str] = Field(None, description="語速設定（僅Spark-TTS語音控制模式）")
 
 @app.post("/text_chat")
 async def text_chat(request: TextChatRequest):
@@ -428,9 +467,41 @@ async def text_chat(request: TextChatRequest):
         bot_message = chat_response["message"]
         llm_time = time.time() - llm_start
         
-        # Step 2: TTS - 文字轉語音
+        # Step 2: TTS - 文字轉語音（支援語者克隆）
         tts_start = time.time()
-        audio_bytes = await tts_service.synthesize(bot_message)
+        
+        # 根據 TTS 提供者使用不同的參數
+        if tts_provider == "vibe":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=request.speaker_voice_path
+            )
+        elif tts_provider == "breezy":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=request.speaker_voice_path
+            )
+        elif tts_provider == "index":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=request.speaker_voice_path,
+                speaker_id=request.speaker_id
+            )
+        elif tts_provider == "spark":
+            # Spark-TTS 支援語者克隆和語音控制兩種模式
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=request.speaker_voice_path,
+                speaker_id=request.speaker_id,
+                use_voice_cloning=request.use_voice_cloning,
+                gender=request.gender,
+                pitch=request.pitch,
+                speed=request.speed
+            )
+        else:
+            # 其他引擎使用基本方法
+            audio_bytes = await tts_service.synthesize(bot_message)
+            
         tts_time = time.time() - tts_start
         
         # 保存音檔到 outputs 目錄
@@ -461,9 +532,11 @@ async def text_chat(request: TextChatRequest):
 @app.post("/conversation")
 async def full_conversation(
     audio_file: UploadFile = File(...),
-    conversation_id: str = Form(None)
+    conversation_id: str = Form(None),
+    speaker_voice_path: str = Form(None, description="指定語者音檔路徑進行語音克隆"),
+    speaker_id: str = Form(None, description="使用預設語者ID")
 ):
-    """完整對話流程：語音 -> 文字 -> 聊天 -> 語音（使用固定參考音檔）"""
+    """完整對話流程：語音 -> 文字 -> 聊天 -> 語音（支援語者克隆）"""
     try:
         # Step 1: STT
         if not audio_file.content_type.startswith("audio/"):
@@ -476,15 +549,49 @@ async def full_conversation(
         chat_response = await chat_service.get_response(user_text, conversation_id)
         bot_message = chat_response["message"]
         
-        # Step 3: TTS (使用 VibeVoice，預設語者索引 0)
-        output_audio_path = await tts_service.synthesize(bot_message, speaker_index=0)
+        # Step 3: TTS（支援語者克隆）
+        if tts_provider == "vibe":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=speaker_voice_path
+            )
+        elif tts_provider == "breezy":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=speaker_voice_path
+            )
+        elif tts_provider == "index":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=speaker_voice_path,
+                speaker_id=speaker_id
+            )
+        elif tts_provider == "spark":
+            audio_bytes = await tts_service.synthesize(
+                text=bot_message,
+                speaker_voice_path=speaker_voice_path,
+                speaker_id=speaker_id,
+                use_voice_cloning=True  # 預設使用語者克隆模式
+            )
+        else:
+            # 其他引擎使用基本方法
+            audio_bytes = await tts_service.synthesize(bot_message)
+        
+        # 保存音檔到 outputs 目錄
+        audio_filename = f"conversation_{uuid.uuid4().hex[:8]}.wav"
+        audio_filepath = os.path.join("./outputs", audio_filename)
+        
+        with open(audio_filepath, 'wb') as f:
+            f.write(audio_bytes)
         
         return {
             "success": True,
             "user_text": user_text,
             "bot_message": bot_message,
             "conversation_id": chat_response["conversation_id"],
-            "audio_url": f"/audio/{os.path.basename(output_audio_path)}",
+            "audio_url": f"/audio/{audio_filename}",
+            "tts_provider": tts_provider,
+            "used_speaker": speaker_voice_path or speaker_id or "default",
             "timestamp": datetime.now().isoformat()
         }
     

@@ -24,6 +24,7 @@ class TTSIndexService:
         
         # 語者管理 - 與其他 TTS 引擎格式一致
         self.speakers = {}  # {speaker_id: {"name": str, "path": str, "transcription": str}}
+        self.default_speaker_path = None  # 預設語者路徑
         
         # 從配置文件載入參數
         self._load_config()
@@ -40,7 +41,14 @@ class TTSIndexService:
         self.device = tts_config.get("device", "cuda:1" if torch.cuda.is_available() else "cpu")
         self.model_dir = tts_config.get("model_dir", self.model_dir)
         self.cfg_path = tts_config.get("cfg_path", self.cfg_path)
+        
+        # 從配置文件讀取預設語者設定
+        default_speaker_config = tts_config.get("default_speaker", {})
+        self.default_speaker_path = default_speaker_config.get("audio_path", None)
+        
         print(f"TTS Index 配置載入: device={self.device}, model_dir={self.model_dir}")
+        if self.default_speaker_path:
+            print(f"預設語者: {self.default_speaker_path}")
 
     async def initialize(self):
         """初始化 IndexTTS 模型"""
@@ -157,13 +165,20 @@ class TTSIndexService:
             voice_path = None
             if speaker_voice_path and os.path.exists(speaker_voice_path):
                 voice_path = speaker_voice_path
+                print(f"使用指定的語者音檔: {speaker_voice_path}")
             elif speaker_id and speaker_id in self.speakers:
                 voice_path = self.speakers[speaker_id]["path"]
+                print(f"使用語者 ID: {speaker_id}")
             else:
-                # 使用第一個可用的語者
-                if self.speakers:
+                # 優先使用配置文件中的預設語者
+                if self.default_speaker_path and os.path.exists(self.default_speaker_path):
+                    voice_path = self.default_speaker_path
+                    print(f"使用配置文件中的預設語者: {self.default_speaker_path}")
+                elif self.speakers:
+                    # 如果配置的預設語者不存在，則使用第一個可用語者
                     first_speaker = next(iter(self.speakers.values()))
                     voice_path = first_speaker["path"]
+                    print(f"配置的預設語者不可用，使用第一個可用語者: {voice_path}")
                 else:
                     raise Exception("沒有可用的語者音檔")
             

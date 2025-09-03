@@ -26,6 +26,7 @@ class TTSSparkService:
         
         # 語者管理 - 與其他 TTS 引擎格式一致
         self.speakers = {}  # {speaker_id: {"name": str, "path": str, "transcription": str}}
+        self.default_speaker_path = None  # 預設語者路徑
         
         # 從配置文件載入參數
         self._load_config()
@@ -49,7 +50,16 @@ class TTSSparkService:
         self.default_pitch = tts_config.get("pitch", "moderate")  # very_low, low, moderate, high, very_high
         self.default_speed = tts_config.get("speed", "moderate")  # very_low, low, moderate, high, very_high
         
+        # 從配置文件讀取預設語者設定
+        default_speaker_config = tts_config.get("default_speaker", {})
+        self.default_speaker_path = default_speaker_config.get("audio_path", None)
+        if default_speaker_config.get("transcription"):
+            self.default_prompt_text = default_speaker_config.get("transcription")
+        
         print(f"TTS Spark 配置載入: device={self.device}, model_dir={self.model_dir}")
+        if self.default_speaker_path:
+            print(f"預設語者: {self.default_speaker_path}")
+            print(f"預設提示文字: {self.default_prompt_text}")
 
     async def initialize(self):
         """初始化 Spark-TTS 模型"""
