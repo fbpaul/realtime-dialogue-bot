@@ -1,0 +1,367 @@
+{
+  "BreezyVoice": {
+    "status": "success",
+    "tests": [
+      {
+        "test_name": "Text1_Speaker1",
+        "text_length": 33,
+        "speaker": "Novem男聲",
+        "synthesis_time": 22.08778977394104,
+        "audio_duration": 9.903310657596371,
+        "rtf": 2.2303440271257693,
+        "file_size": 436814,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker2",
+        "text_length": 33,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 42.79910063743591,
+        "audio_duration": 19.667301587301587,
+        "rtf": 2.1761552009285112,
+        "file_size": 867406,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker3",
+        "text_length": 33,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 19.582011699676514,
+        "audio_duration": 6.327437641723356,
+        "rtf": 3.0947775084422817,
+        "file_size": 279118,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker1",
+        "text_length": 49,
+        "speaker": "Novem男聲",
+        "synthesis_time": 22.709948539733887,
+        "audio_duration": 14.477641723356008,
+        "rtf": 1.5686220845690038,
+        "file_size": 638542,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker2",
+        "text_length": 49,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 62.698071241378784,
+        "audio_duration": 36.594648526077094,
+        "rtf": 1.7133125680029573,
+        "file_size": 1613902,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker3",
+        "text_length": 49,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 23.231701374053955,
+        "audio_duration": 8.126984126984127,
+        "rtf": 2.8585882550105453,
+        "file_size": 358478,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker1",
+        "text_length": 50,
+        "speaker": "Novem男聲",
+        "synthesis_time": 28.208401203155518,
+        "audio_duration": 14.837551020408164,
+        "rtf": 1.9011493988702415,
+        "file_size": 654414,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker2",
+        "text_length": 50,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 81.42241621017456,
+        "audio_duration": 41.38956916099773,
+        "rtf": 1.9672206756600075,
+        "file_size": 1825358,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker3",
+        "text_length": 50,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 21.195135593414307,
+        "audio_duration": 9.206712018140589,
+        "rtf": 2.3021395207813757,
+        "file_size": 406094,
+        "success": true
+      }
+    ]
+  },
+  "VibeVoice": {
+    "status": "success",
+    "tests": [
+      {
+        "test_name": "Text1_Speaker1",
+        "text_length": 33,
+        "speaker": "Novem男聲",
+        "synthesis_time": 7.065088748931885,
+        "audio_duration": 6.933333333333334,
+        "rtf": 1.0190031849420986,
+        "file_size": 332844,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker2",
+        "text_length": 33,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 6.123818397521973,
+        "audio_duration": 7.2,
+        "rtf": 0.8505303329891628,
+        "file_size": 345644,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker3",
+        "text_length": 33,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 5.426501512527466,
+        "audio_duration": 6.533333333333333,
+        "rtf": 0.8305869662031835,
+        "file_size": 313644,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker1",
+        "text_length": 49,
+        "speaker": "Novem男聲",
+        "synthesis_time": 12.90562653541565,
+        "audio_duration": 15.733333333333333,
+        "rtf": 0.8202728730137065,
+        "file_size": 755244,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker2",
+        "text_length": 49,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 8.378548383712769,
+        "audio_duration": 10.133333333333333,
+        "rtf": 0.8268304326032337,
+        "file_size": 486444,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker3",
+        "text_length": 49,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 8.216458559036255,
+        "audio_duration": 10.0,
+        "rtf": 0.8216458559036255,
+        "file_size": 480044,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker1",
+        "text_length": 50,
+        "speaker": "Novem男聲",
+        "synthesis_time": 10.487643957138062,
+        "audio_duration": 12.8,
+        "rtf": 0.8193471841514111,
+        "file_size": 614444,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker2",
+        "text_length": 50,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 9.095820188522339,
+        "audio_duration": 11.066666666666666,
+        "rtf": 0.8219114628182836,
+        "file_size": 531244,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker3",
+        "text_length": 50,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 9.95058274269104,
+        "audio_duration": 12.133333333333333,
+        "rtf": 0.8201029732987121,
+        "file_size": 582444,
+        "success": true
+      }
+    ]
+  },
+  "IndexTTS": {
+    "status": "success",
+    "tests": [
+      {
+        "test_name": "Text1_Speaker1",
+        "text_length": 33,
+        "speaker": "Novem男聲",
+        "synthesis_time": 4.079005718231201,
+        "audio_duration": 7.552,
+        "rtf": 0.5401225792149367,
+        "file_size": 362574,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker2",
+        "text_length": 33,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 3.3141698837280273,
+        "audio_duration": 7.552,
+        "rtf": 0.4388466477394104,
+        "file_size": 362574,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker3",
+        "text_length": 33,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 3.070164442062378,
+        "audio_duration": 6.357333333333333,
+        "rtf": 0.48293274571031536,
+        "file_size": 305230,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker1",
+        "text_length": 49,
+        "speaker": "Novem男聲",
+        "synthesis_time": 4.541462182998657,
+        "audio_duration": 10.24,
+        "rtf": 0.4435021663084626,
+        "file_size": 491598,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker2",
+        "text_length": 49,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 4.3665947914123535,
+        "audio_duration": 10.24,
+        "rtf": 0.42642527259886265,
+        "file_size": 491598,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker3",
+        "text_length": 49,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 4.358262062072754,
+        "audio_duration": 9.770666666666667,
+        "rtf": 0.4460557514403064,
+        "file_size": 469070,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker1",
+        "text_length": 50,
+        "speaker": "Novem男聲",
+        "synthesis_time": 4.972244024276733,
+        "audio_duration": 11.178666666666667,
+        "rtf": 0.44479759282055703,
+        "file_size": 536654,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker2",
+        "text_length": 50,
+        "speaker": "Xinran女聲",
+        "synthesis_time": 4.890064239501953,
+        "audio_duration": 11.008,
+        "rtf": 0.44422821943150015,
+        "file_size": 528462,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker3",
+        "text_length": 50,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 4.4892895221710205,
+        "audio_duration": 10.026666666666667,
+        "rtf": 0.4477349922378012,
+        "file_size": 481358,
+        "success": true
+      }
+    ]
+  },
+  "Spark-TTS": {
+    "status": "success",
+    "tests": [
+      {
+        "test_name": "Text1_Speaker1",
+        "text_length": 33,
+        "speaker": "Novem男聲",
+        "synthesis_time": 9.302026510238647,
+        "audio_duration": 8.02,
+        "rtf": 1.1598536795808787,
+        "file_size": 256684,
+        "success": true
+      },
+      {
+        "test_name": "Text1_Speaker2",
+        "success": false,
+        "error": "Calculated padded input size per channel: (0). Kernel size: (1). Kernel size can't be greater than actual input size"
+      },
+      {
+        "test_name": "Text1_Speaker3",
+        "text_length": 33,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 5.244744777679443,
+        "audio_duration": 5.08,
+        "rtf": 1.032430074346347,
+        "file_size": 162604,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker1",
+        "text_length": 49,
+        "speaker": "Novem男聲",
+        "synthesis_time": 10.483517408370972,
+        "audio_duration": 10.44,
+        "rtf": 1.0041683341351506,
+        "file_size": 334124,
+        "success": true
+      },
+      {
+        "test_name": "Text2_Speaker2",
+        "success": false,
+        "error": "Calculated padded input size per channel: (0). Kernel size: (1). Kernel size can't be greater than actual input size"
+      },
+      {
+        "test_name": "Text2_Speaker3",
+        "text_length": 49,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 8.413700580596924,
+        "audio_duration": 8.34,
+        "rtf": 1.0088370000715736,
+        "file_size": 266924,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker1",
+        "text_length": 50,
+        "speaker": "Novem男聲",
+        "synthesis_time": 10.476167678833008,
+        "audio_duration": 10.48,
+        "rtf": 0.9996343204993328,
+        "file_size": 335404,
+        "success": true
+      },
+      {
+        "test_name": "Text3_Speaker2",
+        "success": false,
+        "error": "Calculated padded input size per channel: (0). Kernel size: (1). Kernel size can't be greater than actual input size"
+      },
+      {
+        "test_name": "Text3_Speaker3",
+        "text_length": 50,
+        "speaker": "SparkTTS男聲",
+        "synthesis_time": 8.67994999885559,
+        "audio_duration": 8.66,
+        "rtf": 1.0023036950179667,
+        "file_size": 277164,
+        "success": true
+      }
+    ]
+  }
+}

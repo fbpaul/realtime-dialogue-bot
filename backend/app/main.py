@@ -13,6 +13,7 @@ from app.stt import STTService
 from app.tts_vibe import TTSVibeService
 from app.tts_breezy import TTSBreezyService
 from app.tts_index import TTSIndexService
+from app.tts_spark import TTSSparkService
 from app.chat import ChatService
 from app.config import config  # 導入配置管理
 
@@ -57,6 +58,9 @@ elif tts_provider == "breezy" and config.is_service_enabled("tts"):
 elif tts_provider == "index" and config.is_service_enabled("tts"):
     tts_service = TTSIndexService()
     print("使用 IndexTTS")
+elif tts_provider == "spark" and config.is_service_enabled("tts"):
+    tts_service = TTSSparkService()
+    print("使用 Spark-TTS")
 else:
     tts_service = None
     print("TTS 服務已停用")
@@ -110,6 +114,10 @@ async def startup_event():
             
         elif tts_provider == "index":
             # IndexTTS 配置
+            await tts_service.initialize()
+            
+        elif tts_provider == "spark":
+            # Spark-TTS 配置
             await tts_service.initialize()
         
         print(f"{tts_provider.upper()} TTS 初始化完成")

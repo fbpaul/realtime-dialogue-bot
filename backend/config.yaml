@@ -18,9 +18,9 @@ stt:
   device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   language: "zh"
   
-# TTS 配置 - 可選擇使用 breezy, vibe, 或 index
+# TTS 配置 - 可選擇使用 breezy, vibe, index, 或 spark
 tts:
-  provider: "index"  # 可選值: "breezy", "vibe", "index"
+  provider: "spark"  # 可選值: "breezy", "vibe", "index", "spark"
   device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   breezy:
@@ -28,13 +28,13 @@ tts:
     model_path: "./models/BreezyVoice"  # 使用實際的本地路徑
     model_repo: "MediaTek-Research/BreezyVoice-300M"
     breezy_voice_path: "/app/BreezyVoice"
-    device: "cuda:1"  # 可選值: "cuda:0", "cuda:1", "cpu"
+    device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   vibe:
     enabled: true
     model_path: "./models/VibeVoice"
     model_repo: "Alibaba-NLP/VibeVoice"
-    device: "cuda:1"  # 可選值: "cuda:0", "cuda:1", "cpu"
+    device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
   
   index:
     enabled: true
@@ -43,7 +43,24 @@ tts:
     device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
     # 預設參考語者設定
     default_speaker:
-      audio_path: "./voices/zh-IndexTTS_man.wav"  # 使用 voices 目錄中的中文語者
+      audio_path: "./voices/zh-Novem_man.wav"  # 使用 voices 目錄中的中文語者
+    # 語音合成參數
+    synthesis:
+      max_text_length: 500  # 最大文字長度
+      timeout: 300  # 超時秒數
+
+  spark:
+    enabled: true
+    model_dir: "./models/Spark-TTS-0.5B"
+    device_id: 0  # CUDA 設備 ID
+    # 預設參考語者設定
+    default_speaker:
+      audio_path: "./voices/zh-Novem_man.wav"  # 預設語者音檔
+    # 預設語音參數
+    default_prompt_text: "欸這個很有趣耶，趕快跟我說一下吧"  # 預設提示文字
+    gender: "male"  # 預設性別: male, female
+    pitch: "moderate"  # 預設音調: very_low, low, moderate, high, very_high
+    speed: "moderate"  # 預設語速: very_low, low, moderate, high, very_high
     # 語音合成參數
     synthesis:
       max_text_length: 500  # 最大文字長度
