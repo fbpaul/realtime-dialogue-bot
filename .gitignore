@@ -11,6 +11,7 @@ backend/test_files
 
 # audio
 *.wav
+*.m4a
 
 # Node.js
 node_modules
