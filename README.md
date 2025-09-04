@@ -1,46 +1,71 @@
 # 🎙️ Realtime Dialogue Bot
 
 結合 STT（語音轉文字）、TTS（文字轉語音）與 LLM（大型語言模型），實現即時的語音對話機器人系統。
-
 ![聊天界面展示](assets/chat_demo.png)
 
 ## ✨ 主要功能
 
 - 🎤 **即時語音識別**：支持高精度的中文語音轉文字
 - 🧠 **智能對話**：整合大型語言模型，提供自然流暢的對話體驗
-- 🔊 **多引擎語音合成**：支持 BreezyVoice、VibeVoice、IndexTTS 三種 TTS 引擎
-- 💻 **現代化 UI**：Vue.js 前端，響應式設計，支持桌面和移動端
+- 🔊 **多引擎語音合成**：支援 BreezyVoice、VibeVoice、IndexTTS、Spark-TTS 四種 TTS 引擎
+- 🎭 **語者克隆**：支援自定義語者音檔進行語音克隆
+- 💻 **現代化 UI**：Vue.js 前端，響應式設計，支援桌面和移動端
 - ⚡ **高性能優化**：CUDA 加速、模型緩存、混合精度推論
 
-## 🏗️ 系統架構
+## 🏗️ 專案架構
 
-### 後端 (FastAPI)
+### 整體目錄結構
 ```
-backend/
-├── app/
-│   ├── main.py              # FastAPI 主應用
-│   ├── config.py            # 配置管理
-│   ├── stt.py              # 語音轉文字服務
-│   ├── tts_breezy.py       # BreezyVoice TTS
-│   ├── tts_vibe.py         # VibeVoice TTS  
-│   ├── tts_index.py        # IndexTTS
-│   └── chat.py             # LLM 聊天服務
-├── config.yaml             # 服務配置文件
-├── models/                 # 模型檔案目錄
-├── outputs/                # 生成的音頻輸出
-└── voices/                 # 語者音檔庫
-```
-
-### 前端 (Vue.js)
-```
-frontend/
-├── src/
-│   ├── components/
-│   │   └── VoiceChat.vue   # 主聊天介面
-│   ├── App.vue
-│   └── main.js
-├── package.json
-└── vite.config.js
+realtime-dialogue-bot/
+├── README.md               # 專案說明文件
+├── assets/                 # 靜態資源檔案
+├── backend/                # 後端服務
+│   ├── app/                # FastAPI 應用程式
+│   │   ├── main.py         # API 主程式
+│   │   ├── config.py       # 配置管理
+│   │   ├── stt.py          # 語音轉文字服務
+│   │   ├── chat.py         # LLM 聊天服務
+│   │   ├── tts_breezy.py   # BreezyVoice TTS 服務
+│   │   ├── tts_vibe.py     # VibeVoice TTS 服務
+│   │   ├── tts_index.py    # IndexTTS 服務
+│   │   └── tts_spark.py    # Spark-TTS 服務
+│   ├── BreezyVoice/        # BreezyVoice 模型原始碼
+│   ├── VibeVoice/          # VibeVoice 模型原始碼
+│   ├── Spark-TTS/          # Spark-TTS 模型原始碼
+│   ├── index-tts/          # IndexTTS 模型原始碼
+│   ├── llm_tools/          # LLM 工具和配置
+│   │   ├── async_llm_chat.py
+│   │   ├── embed_rerank_model.py
+│   │   ├── llm_chat.py
+│   │   ├── memory.py
+│   │   └── configs/        # LLM 模型配置
+│   ├── models/             # 預訓練模型目錄
+│   │   ├── models--Qwen--Qwen2.5-1.5B/
+│   │   ├── models--MediaTek-Research--BreezyVoice-300M/
+│   │   ├── models--mobiuslabsgmbh--faster-whisper-large-v3-turbo/
+│   │   ├── IndexTTS-1.5/
+│   │   ├── Spark-TTS-0.5B/
+│   │   └── VibeVoice/
+│   ├── voices/             # 語者音檔目錄
+│   ├── outputs/            # 生成音頻輸出目錄
+│   ├── uploads/            # 上傳檔案暫存目錄
+│   ├── config.yaml         # 主要配置檔案
+│   ├── requirements.txt    # Python 依賴套件
+│   ├── Dockerfile          # 容器化配置
+│   └── docker-compose.yml  # 多容器編排
+├── frontend/               # 前端應用
+│   ├── src/
+│   │   ├── App.vue         # 主應用元件
+│   │   ├── components/     # Vue 元件
+│   │   ├── composables/    # Vue 組合式函數
+│   │   ├── router/         # 路由配置
+│   │   ├── services/       # API 服務
+│   │   └── stores/         # 狀態管理
+│   ├── package.json        # Node.js 依賴配置
+│   ├── vite.config.js      # Vite 建置配置
+│   ├── docker-compose.yml  # 前端容器配置
+│   └── start-frontend*.sh  # 前端啟動腳本
+└── repo_ref/               # 參考資料和文檔
 ```
 
 ## 🚀 快速開始
@@ -58,92 +83,20 @@ cd realtime-dialogue-bot
 ```
 
 ### 2. 後端設置
-
-#### 使用 Docker 部署 (推薦)
-```bash
-cd backend
-# 啟動所有服務
-bash start-with-setup.sh
-```
-
-#### 手動安裝
-```bash
-cd backend
-# 安裝依賴
-pip install -r requirements.txt
-
-# 下載模型檔案
-# STT: faster-whisper-large-v3-turbo
-# LLM: Qwen2.5-1.5B
-# TTS: BreezyVoice-300M, VibeVoice, IndexTTS-1.5
-
-# 啟動服務
-python -m app.main
-```
+- 參照後端的 [README.md](backend/README.md)
 
 ### 3. 前端設置
+- 參照前端的 [README.md](frontend/README.md)
 
-#### 使用 Docker
-```bash
-cd frontend
-bash start-frontend-docker.sh
-```
+## 📊 系統性能分析
 
-#### 手動安裝
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### TTS 性能
+- **IndexTTS**: 最快的合成速度，平均 RTF ≈ 0.45，適合即時應用，但中國口音較重
+- **VibeVoice**: RTF ≈ 0.82，如果克隆語者音檔品質不佳，無法生成好的聲音
+- **Spark-TTS**: 近即時性能，RTF ≈ 1.0，接近實時合成，中國口音重
+- **BreezyVoice**: RTF ≈ 1.5-3.0，較低的中國口音，但會跳針，導致速度評估起來很慢 (莫名生成太長的語音)
 
-### 4. 訪問應用
-- 前端界面: http://localhost:3000
-- 後端 API: http://localhost:8000
-- API 文檔: http://localhost:8000/docs
-
-## ⚙️ 配置說明
-
-### 核心配置 (`backend/config.yaml`)
-
-```yaml
-# TTS 引擎選擇
-tts:
-  provider: "index"  # 可選: "breezy", "vibe", "index"
-  
-  # CUDA 設備分配
-  breezy:
-    device: "cuda:1"
-  vibe:
-    device: "cuda:1" 
-  index:
-    device: "cuda:1"
-
-# STT 配置
-stt:
-  device: "cuda:0"
-  model: "large-v3-turbo"
-
-# LLM 配置  
-chat:
-  device: "cuda:0"
-  use_llm_tools: true
-  llm_tools_model: "Qwen2.5-32B-Instruct-GPTQ-Int4"
-```
-
-### 設備資源分配
-- **STT + LLM**: CUDA:0
-- **TTS 引擎**: CUDA:1
-- **記憶體優化**: 模型緩存、混合精度、並行處理
-
-## 📊 性能優化
-
-### TTS 引擎比較
-| 引擎 | 速度 | 音質 | 語者支持 | 中文表現 |
-|------|------|------|----------|----------|
-| **BreezyVoice** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 自定義語者 | 優秀 |
-| **VibeVoice** | ⭐⭐⭐ | ⭐⭐⭐⭐ | 多語言支持 | 良好 |
-| **IndexTTS** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 克隆語者 | 優秀 |
-| **Spark-TTS** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 克隆語者 | 良好 |
+*RTF (Real Time Factor): 值越小表示合成速度越快。RTF=1.0 表示實時合成速度*
 
 ### 詳細測試結果
 
@@ -198,13 +151,6 @@ chat:
 | 長文字 | Speaker1 | 1.000 | 10.476s | 10.480s |
 | 長文字 | Speaker3 | 1.002 | 8.680s | 8.660s |
 
-#### 性能總結
-- **IndexTTS**: 最快的合成速度，平均 RTF ≈ 0.45，適合即時應用，但中國口音較重
-- **VibeVoice**: RTF ≈ 0.82，如果克隆語者音檔品質不佳，無法生成好的聲音
-- **Spark-TTS**: 近即時性能，RTF ≈ 1.0，接近實時合成，中國口音重
-- **BreezyVoice**: RTF ≈ 1.5-3.0，較低的中國口音，但會跳針，導致速度評估起來很慢 (莫名生成太長的語音)
-
-*RTF (Real Time Factor): 值越小表示合成速度越快。RTF=1.0 表示實時合成速度*
 
 ### 系統性能指標
 - **STT 延遲**: ~500-800ms
@@ -212,168 +158,24 @@ chat:
 - **TTS 合成**: ~2-7s (取決於引擎和文字長度)
 - **端到端延遲**: ~3-8s
 
-## 🎯 API 接口
-
-### 主要端點
-
-```bash
-# 語音轉文字
-POST /stt
-Content-Type: multipart/form-data
-
-# 文字轉語音（支援語者克隆）
-POST /tts
-{
-  "text": "要合成的文字",
-  "speaker_voice_path": "./voices/zh-CustomSpeaker.wav",  # 可選，語者克隆音檔路徑
-  "cfg_scale": 1.0  # 可選，僅 VibeVoice 使用
-}
-
-# 文字對話（包含 TTS 和語者克隆）
-POST /text_chat
-{
-  "message": "你好，今天天氣如何？",
-  "speaker_voice_path": "./voices/zh-CustomSpeaker.wav",  # 可選，語者克隆
-  "speaker_id": "zh-Novem_man",  # 可選，使用預設語者 ID
-  "use_voice_cloning": true,  # 可選，是否使用語者克隆（Spark-TTS）
-  "gender": "female",  # 可選，性別設定（Spark-TTS 語音控制模式）
-  "pitch": "high",     # 可選，音調設定（Spark-TTS 語音控制模式）
-  "speed": "moderate"  # 可選，語速設定（Spark-TTS 語音控制模式）
-}
-
-# 完整語音對話流程（支援語者克隆）
-POST /conversation
-Content-Type: multipart/form-data
-- audio_file: 用戶語音檔案
-- conversation_id: 對話 ID（可選）
-- speaker_voice_path: 語者克隆音檔路徑（可選）
-- speaker_id: 預設語者 ID（可選）
-
-# 獲取可用語者列表
-GET /speakers
-
-# 服務健康檢查
-GET /health/{service}  # stt, llm, tts
-```
-
-### 語者克隆使用示例
-
-```bash
-# 1. 獲取可用語者列表
-curl -X GET "http://localhost:8000/speakers"
-
-# 2. 使用語者克隆進行 TTS
-curl -X POST "http://localhost:8000/tts" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "你好，這是語者克隆測試",
-    "speaker_voice_path": "./voices/zh-Novem_man.wav"
-  }' \
-  --output cloned_voice.wav
-
-# 3. 文字對話 + 語者克隆
-curl -X POST "http://localhost:8000/text_chat" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "告訴我關於人工智慧的歷史",
-    "speaker_voice_path": "./voices/zh-CustomSpeaker.wav",
-    "use_voice_cloning": true
-  }'
-
-# 4. Spark-TTS 語音控制模式
-curl -X POST "http://localhost:8000/text_chat" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "這是語音控制模式測試",
-    "use_voice_cloning": false,
-    "gender": "female",
-    "pitch": "high",
-    "speed": "moderate"
-  }'
-```
-
-### 回應格式
-```json
-{
-  "success": true,
-  "response": "今天天氣很不錯！陽光明媚，溫度適宜。",
-  "audio_url": "/audio/response_12345.wav",
-  "processing_times": {
-    "llm_time": 687,
-    "tts_time": 5739,
-    "total_time": 6427
-  }
-}
-```
-
-## 🛠️ 開發指南
-
-### 新增 TTS 引擎
-1. 繼承 `TTSBaseService` 類別
-2. 實現 `initialize()` 和 `synthesize()` 方法
-3. 在 `config.yaml` 中添加配置
-4. 在 `main.py` 中註冊引擎
-
-### 自定義語者
-```bash
-# 添加新語者到 voices/ 目錄
-cp your_voice.wav backend/voices/zh-CustomSpeaker.wav
-
-# 通過 API 使用自定義語者進行語者克隆
-curl -X POST "http://localhost:8000/text_chat" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "使用自定義語者的測試",
-    "speaker_voice_path": "./voices/zh-CustomSpeaker.wav"
-  }'
-```
-
-### 語者克隆最佳實踐
-1. **語者音檔品質**: 使用清晰、無背景噪音的 WAV 格式音檔
-2. **音檔長度**: 建議 3-10 秒，包含完整句子
-3. **語言一致性**: 語者音檔語言應與合成文字語言一致
-4. **引擎選擇**: 
-   - IndexTTS: 速度最快，適合即時應用
-   - VibeVoice: 品質較好但對音檔品質要求高
-   - Spark-TTS: 支援語者克隆和語音控制兩種模式
-   - BreezyVoice: 品質最佳但速度較慢
-
-### 測試工具
-```bash
-# 測試語者克隆功能
-python test_voice_cloning_api.py
-
-# 測試 TTS 引擎性能比較
-python test_all_tts_engines.py
-
-# 組件測試  
-python test_components.py
-```
-
-## 📋 部署選項
-
-### 1. Docker Compose (推薦)
-```bash
-# 一鍵啟動前後端
-docker-compose up -d
-```
-
-### 2. 雲端部署
-- 支持 AWS, GCP, Azure
-- 建議使用 GPU 實例 (T4, V100, A100)
-- 至少 16GB RAM, 50GB 儲存空間
 
 ## 📄 授權協議
 
-MIT License
+MIT License - 詳見 LICENSE 文件
+
+## 📚 相關文檔
+
+- [後端配置指南](backend/CONFIG_GUIDE.md)
+- [部署方式說明](backend/部署方式.md)
+- [前端開發文檔](frontend/README.md)
+- [API 文檔](http://localhost:8000/docs) (服務運行時可訪問)
 
 
-## 📞 聯絡方式
+## 📜 授權條款
 
-- 專案維護者: fbpaul
-- GitHub Issues: [提交問題](https://github.com/fbpaul/realtime-dialogue-bot/issues)
-- 技術討論: [Discussions](https://github.com/fbpaul/realtime-dialogue-bot/discussions)
+本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
 
----
+## 👥 開發團隊
 
-⭐ 如果這個專案對您有幫助，請給我們一個星星！
+- **主要開發者**: paul.fc.tsai
+- **專案維護**: paul.fc.tsai

@@ -134,7 +134,7 @@ class ChatService:
             response, _ = self.llm_chat.chat(
                 query=user_message,
                 history=llm_history,
-                system="你是一個親切友善的語音助理，會用繁體中文回答問題。請保持回覆簡潔有趣，適合語音對話。"
+                system="你是一個親切友善並善於誇讚人的語音助理，會用繁體中文回答問題。請保持回覆簡潔有趣，不要講太多話，適合語音對話。"
             )
             
             return response.strip()

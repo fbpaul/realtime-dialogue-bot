@@ -185,30 +185,6 @@ GET /speaker_info
 - 批次處理優化
 - 動態參數調整
 
-## 🧪 測試驗證
-
-### 執行完整測試
-```bash
-python test_api.py
-```
-
-### 執行效能測試
-```bash
-python test_tts_optimization.py
-```
-
-### 個別模組測試
-```bash
-# 測試 STT
-python -c "from app.stt import STTService; import asyncio; asyncio.run(STTService().test())"
-
-# 測試 TTS
-python app/tts_vibe.py
-
-# 測試 LLM
-python -c "from app.chat import ChatService; import asyncio; asyncio.run(ChatService().test())"
-```
-
 ## 📊 效能基準
 
 在 RTX 4090 GPU 上的測試結果：
@@ -220,61 +196,6 @@ python -c "from app.chat import ChatService; import asyncio; asyncio.run(ChatSer
 | TTS  | ~3.0秒         | ~8.0秒            | ~15秒          |
 
 *注意：首次載入模型需要額外的初始化時間*
-
-## 🔍 故障排除
-
-### 常見問題
-
-1. **CUDA 錯誤**
-   - 確認 GPU 驅動程式更新
-   - 檢查 CUDA 版本相容性
-   - 重新安裝 PyTorch with CUDA
-
-2. **記憶體不足**
-   - 減少批次大小
-   - 清理快取：`torch.cuda.empty_cache()`
-   - 檢查 GPU 記憶體使用量
-
-3. **語音合成品質差**
-   - 調整 `cfg_scale` 參數 (0.7-1.2)
-   - 使用高品質語者音檔
-   - 確認文字格式正確
-
-4. **模型載入緩慢**
-   - 使用 SSD 儲存模型
-   - 預先下載模型檔案
-   - 確認網路連線穩定
-
-### 日誌查看
-```bash
-# Docker 日誌
-docker logs realtime-dialogue-backend
-
-# Podman 日誌
-podman logs realtime-dialogue-backend
-
-# 即時日誌
-docker logs -f realtime-dialogue-backend
-```
-
-## 🔧 進階設定
-
-### 自訂 TTS 參數
-```python
-# 在 tts_vibe.py 中調整
-DEFAULT_CFG_SCALE = 1.0        # 生成品質控制
-MAX_CACHE_SIZE = 50           # 快取大小限制
-SEGMENT_LENGTH_THRESHOLD = 150 # 分段處理閾值
-```
-
-### 語者管理
-```python
-# 動態添加語者
-await tts_service.set_speaker_voices(
-    speaker_voices=["/path/to/voice1.wav", "/path/to/voice2.wav"],
-    speaker_names=["Speaker1", "Speaker2"]
-)
-```
 
 ## 📜 授權條款
 
