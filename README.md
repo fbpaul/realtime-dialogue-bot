@@ -159,10 +159,6 @@ cd realtime-dialogue-bot
 - **端到端延遲**: ~3-8s
 
 
-## 📄 授權協議
-
-MIT License - 詳見 LICENSE 文件
-
 ## 📚 相關文檔
 
 - [後端配置指南](backend/CONFIG_GUIDE.md)

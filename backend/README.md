@@ -199,7 +199,7 @@ GET /speaker_info
 
 ## 📜 授權條款
 
-本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
+本專案採用 MIT 授權條款 - 詳見 [LICENSE](../LICENSE) 檔案
 
 ## 👥 開發團隊
 
