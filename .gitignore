@@ -1,7 +1,12 @@
 # folders
 repo_ref
 backend/models
+backend/BreezyVoice
 backend/G2PWModel
+backend/VibeVoice
+backend/index-tts
+backend/Spark-TTS
+backend/test_code
 
 # audio
 *.wav
