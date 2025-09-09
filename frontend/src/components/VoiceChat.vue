@@ -1,53 +1,39 @@
 <template>
   <div class="chat-app">
-    <!-- 側邊欄 -->
-    <div class="sidebar" :class="{ 'collapsed': sidebarCollapsed }">
-      <div class="sidebar-header">
-        <button 
-          class="sidebar-toggle"
-          @click="toggleSidebar"
-        >
-          <Menu :size="20" />
-        </button>
-        <div v-if="!sidebarCollapsed" class="logo">
+    <!-- 主聊天區域 -->
+    <div class="chat-main">
+      <!-- 聊天頭部 -->
+      <div class="chat-header">
+        <div class="header-left">
           <MessageCircle :size="24" />
-          <span>智慧語音助手</span>
-        </div>
-      </div>
-
-      <div v-if="!sidebarCollapsed" class="sidebar-content">
-        <button 
-          class="new-chat-btn"
-          @click="startNewConversation"
-          :disabled="isProcessing"
-        >
-          <Plus :size="16" />
-          新對話
-        </button>
-
-        <div class="chat-history">
-          <div class="history-section">
-            <h3>功能列表</h3>
-            <div class="history-item active">
-              <MessageCircle :size="16" />
-              <span>語音對話體驗</span>
-            </div>
+          <div>
+            <h1>智慧語音助手</h1>
+            <p>支援語音對話、文字輸入，享受智能交流體驗</p>
           </div>
         </div>
-
-        <div class="sidebar-footer">
-          <div class="status-section">
-            <h4>服務狀態</h4>
-            <div class="status-item">
-              <div class="status-dot" :class="{ 'online': sttStatus }"></div>
-              <span>語音轉文字 (STT)</span>
-            </div>
-            <div class="status-item">
-              <div class="status-dot" :class="{ 'online': llmStatus }"></div>
-              <span>語言模型 (LLM)</span>
-            </div>
-            <div class="status-item">
-              <div class="status-dot" :class="{ 'online': ttsStatus }"></div>
+        
+        <div class="header-controls">
+          <!-- TTS 控制開關 -->
+          <button 
+            :class="['tts-toggle-btn', { 'enabled': ttsEnabled }]"
+            @click="toggleTTS"
+            :title="ttsEnabled ? '關閉TTS' : '開啟TTS'"
+          >
+            <Volume2 v-if="ttsEnabled" :size="16" />
+            <VolumeX v-else :size="16" />
+            {{ ttsEnabled ? 'TTS開啟' : 'TTS關閉' }}
+          </button>
+          
+          <button 
+            class="new-chat-btn"
+            @click="startNewConversation"
+            :disabled="isProcessing"
+          >
+            <Plus :size="16" />
+            新對話
+          </button>
+        </div>
+      </div>
               <span>文字轉語音 (TTS)</span>
             </div>
           </div>

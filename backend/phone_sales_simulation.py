@@ -647,17 +647,7 @@ class PhoneSalesSimulator:
         
         total_score, speed_score, accuracy_score, stability_score = calculate_performance_score()
         
-        # 效能等級
-        def get_performance_grade(score):
-            if score >= 90: return "A+ (優秀)"
-            elif score >= 80: return "A  (良好)"
-            elif score >= 70: return "B+ (中上)"
-            elif score >= 60: return "B  (中等)"
-            elif score >= 50: return "C+ (中下)"
-            elif score >= 40: return "C  (及格)"
-            else: return "D  (待改善)"
-        
-        print(f"📈 整體表現: {total_score:.1f}/100 - {get_performance_grade(total_score)}")
+        print(f"📈 整體表現: {total_score:.1f}/100")
         print()
         print(f"🚀 整體速度指標:")
         print(f"   LLM 整體速度: {overall_llm_speed:.1f} 字/秒")
