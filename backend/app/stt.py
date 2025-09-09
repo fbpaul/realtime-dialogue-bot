@@ -107,7 +107,7 @@ class STTService:
                 beam_size=5,  # 提升準確度
                 best_of=5,
                 temperature=0.0,       # 降低隨機性
-                initial_prompt="以下是台灣繁體中文的金融服務對話，包含銀行名稱如台北富邦銀行、理財專員等專業術語。"  # 添加提示
+                initial_prompt="台北富邦銀行的對話"  # 添加提示
             )
             
             # 清理暫存檔
