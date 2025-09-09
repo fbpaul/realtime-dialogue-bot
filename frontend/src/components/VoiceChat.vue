@@ -157,6 +157,14 @@
           ></textarea>
           <div class="input-actions">
             <button 
+              :class="['tts-btn', { 'disabled': !ttsEnabled }]"
+              @click="toggleTTS"
+              :title="ttsEnabled ? '禁用語音回應' : '啟用語音回應'"
+            >
+              <Volume2 v-if="ttsEnabled" :size="16" />
+              <VolumeX v-else :size="16" />
+            </button>
+            <button 
               :class="['mic-btn', { 'recording': isRecording }]"
               @click="toggleRecording"
               :disabled="isProcessing && !isRecording"
@@ -206,6 +214,7 @@ import {
   Headphones,
   Brain,
   Volume2,
+  VolumeX,
   Menu,
   Plus
 } from 'lucide-vue-next'
@@ -223,6 +232,7 @@ const chatHistory = reactive([])
 const chatMessagesRef = ref(null)
 const textareaRef = ref(null)
 const sidebarCollapsed = ref(false)
+const ttsEnabled = ref(true) // 控制是否啟用TTS
 
 // 計算屬性
 const allServicesOnline = computed(() => {
@@ -240,6 +250,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 // 側邊欄控制
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
+}
+
+// 切換TTS功能
+const toggleTTS = () => {
+  ttsEnabled.value = !ttsEnabled.value
 }
 
 // 自動調整textarea高度
@@ -460,7 +475,7 @@ const processLLMAndTTS = async (userText, assistantMessageId) => {
     if (assistantMessage) {
       assistantMessage.text = chatResult.response
       assistantMessage.isProcessing = false
-      assistantMessage.showTtsProgress = true // 顯示TTS處理中狀態
+      assistantMessage.showTtsProgress = ttsEnabled.value // 只有啟用TTS時才顯示TTS處理狀態
       assistantMessage.processingTimes = {
         llm_time: llmTime
       }
@@ -469,11 +484,21 @@ const processLLMAndTTS = async (userText, assistantMessageId) => {
     await nextTick()
     scrollToBottom()
 
-    // 第二步：並行執行TTS轉換
-    processingStatus.value = '正在生成語音...'
-    
-    // TTS處理（異步進行，不阻塞UI更新）
-    await generateTTS(chatResult.response, assistantMessageId)
+    // 第二步：根據TTS開關決定是否執行TTS轉換
+    if (ttsEnabled.value) {
+      processingStatus.value = '正在生成語音...'
+      // TTS處理（異步進行，不阻塞UI更新）
+      await generateTTS(chatResult.response, assistantMessageId)
+    } else {
+      // 如果TTS被禁用，直接更新為完成狀態
+      if (assistantMessage) {
+        assistantMessage.showTtsProgress = false
+        assistantMessage.processingTimes = {
+          ...assistantMessage.processingTimes,
+          tts_time: '已禁用'
+        }
+      }
+    }
 
   } catch (error) {
     console.error('LLM/TTS處理失敗:', error)
@@ -1126,7 +1151,7 @@ const formatDuration = (seconds) => {
   gap: 6px;
 }
 
-.mic-btn, .send-btn {
+.mic-btn, .send-btn, .tts-btn {
   width: 36px;
   height: 36px;
   border-radius: 8px;
@@ -1136,6 +1161,24 @@ const formatDuration = (seconds) => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.tts-btn {
+  background: #16a34a;
+  color: white;
+}
+
+.tts-btn.disabled {
+  background: #dc2626;
+  color: white;
+}
+
+.tts-btn:hover {
+  background: #15803d;
+}
+
+.tts-btn.disabled:hover {
+  background: #b91c1c;
 }
 
 .mic-btn {
@@ -1163,7 +1206,7 @@ const formatDuration = (seconds) => {
   background: #2563eb;
 }
 
-.send-btn:disabled, .mic-btn:disabled {
+.send-btn:disabled, .mic-btn:disabled, .tts-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
