@@ -95,25 +95,30 @@
                 <div v-if="message.isProcessing" class="processing-indicator">
                   <Loader2 :size="14" class="spinning" />
                 </div>
+                <!-- TTS處理中指示器 -->
+                <div v-if="message.showTtsProgress" class="tts-progress-indicator">
+                  <Volume2 :size="14" class="spinning" />
+                  <span>正在生成語音...</span>
+                </div>
               </div>
               
               <!-- 處理時間顯示 -->
               <div v-if="message.processingTimes && !message.isProcessing" class="processing-times">
                 <div v-if="message.processingTimes.stt_time" class="time-item stt-time">
                   <Headphones :size="12" />
-                  <span>STT: {{ message.processingTimes.stt_time }}ms</span>
+                  <span>STT: {{ message.processingTimes.stt_time }}</span>
                 </div>
                 <div v-if="message.processingTimes.llm_time" class="time-item llm-time">
                   <Brain :size="12" />
-                  <span>LLM: {{ message.processingTimes.llm_time }}ms</span>
+                  <span>LLM: {{ message.processingTimes.llm_time }}</span>
                 </div>
                 <div v-if="message.processingTimes.tts_time" class="time-item tts-time">
                   <Volume2 :size="12" />
-                  <span>TTS: {{ message.processingTimes.tts_time }}ms</span>
+                  <span>TTS: {{ message.processingTimes.tts_time }}</span>
                 </div>
                 <div v-if="message.processingTimes.total_time" class="time-item total-time">
                   <Timer :size="12" />
-                  <span>總計: {{ message.processingTimes.total_time }}ms</span>
+                  <span>總計: {{ message.processingTimes.total_time }}</span>
                 </div>
               </div>
               
@@ -123,7 +128,7 @@
             </div>
           </div>
           
-          <div v-if="message.audioUrl && !message.isProcessing" class="audio-attachment">
+          <div v-if="message.audioUrl && !message.isProcessing && !message.showTtsProgress" class="audio-attachment">
             <button class="play-btn" @click="playAudio(message.audioUrl)">
               <Play :size="16" />
               <span v-if="message.type === 'user'">播放原始錄音</span>
@@ -334,11 +339,13 @@ const processRecording = async () => {
   isProcessing.value = true
   processingStatus.value = '正在轉換語音...'
 
+  const totalStartTime = performance.now()
+
   try {
     // 創建音頻 blob
     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
     const formData = new FormData()
-    formData.append('file', audioBlob, 'recording.wav')  // 修改字段名為 'file'
+    formData.append('file', audioBlob, 'recording.wav')
 
     // 添加處理中的用戶訊息佔位符
     const userMessageId = Date.now()
@@ -354,7 +361,8 @@ const processRecording = async () => {
     await nextTick()
     scrollToBottom()
 
-    // 第一階段：語音轉文字 (STT)
+    // 第一階段：語音轉文字 (STT) - 優先執行
+    const sttStartTime = performance.now()
     const sttResponse = await fetch(`${API_BASE_URL}/stt`, {
       method: 'POST',
       body: formData
@@ -365,6 +373,8 @@ const processRecording = async () => {
     }
 
     const sttResult = await sttResponse.json()
+    const sttEndTime = performance.now()
+    const sttTime = ((sttEndTime - sttStartTime) / 1000).toFixed(3) + 's'
     
     // 立即更新用戶訊息顯示轉錄結果
     const userMessage = chatHistory.find(msg => msg.id === userMessageId)
@@ -372,60 +382,40 @@ const processRecording = async () => {
       userMessage.text = sttResult.transcription
       userMessage.isProcessing = false
       userMessage.processingTimes = {
-        stt_time: sttResult.processing_time
+        stt_time: sttResult.processing_time + 'ms'  // API返回毫秒，添加單位
       }
     }
 
     await nextTick()
     scrollToBottom()
 
-    // 第二階段：文字對話 (LLM + TTS)
-    processingStatus.value = '正在生成回應...'
-    
-    // 添加助理回應的佔位符
+    // 添加助理回應的佔位符 - 顯示LLM處理狀態
     const assistantMessageId = Date.now() + 1
     chatHistory.push({
       id: assistantMessageId,
       type: 'assistant',
       text: '正在思考回應...',
       timestamp: new Date(),
-      isProcessing: true
+      isProcessing: true,
+      showTtsProgress: false, // 新增標記，用於控制TTS進度顯示
+      totalStartTime: performance.now() // 記錄助理回應開始時間
     })
 
     await nextTick()
     scrollToBottom()
 
-    // 調用文字對話 API
-    const chatResponse = await fetch(`${API_BASE_URL}/text_chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message: sttResult.transcription })
-    })
+    // 並行處理：LLM + TTS 分離
+    await processLLMAndTTS(sttResult.transcription, assistantMessageId)
 
-    if (!chatResponse.ok) {
-      throw new Error('生成回應失敗')
-    }
-
-    const chatResult = await chatResponse.json()
+    // 計算總處理時間
+    const totalEndTime = performance.now()
+    const totalTime = ((totalEndTime - totalStartTime) / 1000).toFixed(3) + 's'
     
-    // 更新助理訊息
-    const assistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
-    if (assistantMessage) {
-      assistantMessage.text = chatResult.response
-      assistantMessage.audioUrl = chatResult.audio_url ? `${API_BASE_URL}${chatResult.audio_url}` : null
-      assistantMessage.isProcessing = false
-      assistantMessage.processingTimes = {
-        llm_time: chatResult.processing_times.llm_time,
-        tts_time: chatResult.processing_times.tts_time,
-        total_time: chatResult.processing_times.total_time
-      }
+    // 更新助理訊息的總處理時間
+    const finalAssistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
+    if (finalAssistantMessage && finalAssistantMessage.processingTimes) {
+      finalAssistantMessage.processingTimes.total_time = totalTime
     }
-
-    // 滾動到底部
-    await nextTick()
-    scrollToBottom()
 
   } catch (error) {
     console.error('處理語音失敗:', error)
@@ -438,6 +428,117 @@ const processRecording = async () => {
   } finally {
     isProcessing.value = false
     processingStatus.value = ''
+  }
+}
+
+// 新增函數：分離處理LLM和TTS
+const processLLMAndTTS = async (userText, assistantMessageId) => {
+  try {
+    // 第一步：獲取LLM回應
+    processingStatus.value = '正在生成回應...'
+    
+    const llmStartTime = performance.now()
+    
+    const chatFormData = new FormData()
+    chatFormData.append('text', userText)
+    
+    const chatResponse = await fetch(`${API_BASE_URL}/chat`, {
+      method: 'POST',
+      body: chatFormData
+    })
+
+    if (!chatResponse.ok) {
+      throw new Error('生成回應失敗')
+    }
+
+    const chatResult = await chatResponse.json()
+    const llmEndTime = performance.now()
+    const llmTime = ((llmEndTime - llmStartTime)).toFixed(0) + 'ms'
+    
+    // 立即更新助理訊息顯示LLM回應文字
+    const assistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
+    if (assistantMessage) {
+      assistantMessage.text = chatResult.response
+      assistantMessage.isProcessing = false
+      assistantMessage.showTtsProgress = true // 顯示TTS處理中狀態
+      assistantMessage.processingTimes = {
+        llm_time: llmTime
+      }
+    }
+
+    await nextTick()
+    scrollToBottom()
+
+    // 第二步：並行執行TTS轉換
+    processingStatus.value = '正在生成語音...'
+    
+    // TTS處理（異步進行，不阻塞UI更新）
+    await generateTTS(chatResult.response, assistantMessageId)
+
+  } catch (error) {
+    console.error('LLM/TTS處理失敗:', error)
+    throw error
+  }
+}
+
+// 新增函數：TTS生成
+const generateTTS = async (text, assistantMessageId) => {
+  try {
+    const ttsStartTime = performance.now()
+    
+    const ttsResponse = await fetch(`${API_BASE_URL}/tts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: text,
+        speaker_voice_path: null,
+        cfg_scale: 1.0
+      })
+    })
+
+    if (!ttsResponse.ok) {
+      throw new Error('TTS轉換失敗')
+    }
+
+    // 將TTS結果轉為blob URL
+    const audioBlob = await ttsResponse.blob()
+    const audioUrl = URL.createObjectURL(audioBlob)
+    
+    const ttsEndTime = performance.now()
+    const ttsTime = ((ttsEndTime - ttsStartTime)).toFixed(0) + 'ms'
+
+    // 更新助理訊息，添加音頻和處理時間
+    const assistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
+    if (assistantMessage) {
+      assistantMessage.audioUrl = audioUrl
+      assistantMessage.showTtsProgress = false
+      
+      // 使用前端計算的處理時間
+      const currentTimes = assistantMessage.processingTimes || {}
+      assistantMessage.processingTimes = {
+        ...currentTimes,
+        tts_time: ttsTime
+      }
+    }
+
+    await nextTick()
+    scrollToBottom()
+
+  } catch (error) {
+    console.error('TTS生成失敗:', error)
+    // TTS失敗時，仍保留文字回應，只是沒有音頻
+    const assistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
+    if (assistantMessage) {
+      assistantMessage.showTtsProgress = false
+      const currentTimes = assistantMessage.processingTimes || {}
+      assistantMessage.processingTimes = {
+        ...currentTimes,
+        tts_time: 'TTS失敗'
+      }
+    }
+    throw error
   }
 }
 
@@ -455,6 +556,9 @@ const sendTextMessage = async () => {
   
   isProcessing.value = true
 
+  // 記錄開始時間用於計算總時間
+  const totalStartTime = performance.now()
+
   // 添加用戶訊息
   chatHistory.push({
     id: Date.now(),
@@ -470,43 +574,25 @@ const sendTextMessage = async () => {
     type: 'assistant',
     text: '正在思考回應...',
     timestamp: new Date(),
-    isProcessing: true
+    isProcessing: true,
+    showTtsProgress: false
   })
 
   await nextTick()
   scrollToBottom()
 
   try {
-    const response = await fetch(`${API_BASE_URL}/text_chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message: userMessage })
-    })
+    // 使用分離處理邏輯
+    await processLLMAndTTS(userMessage, assistantMessageId)
 
-    if (response.ok) {
-      const result = await response.json()
-      
-      // 更新助理訊息
-      const assistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
-      if (assistantMessage) {
-        assistantMessage.text = result.response
-        assistantMessage.audioUrl = result.audio_url ? `${API_BASE_URL}${result.audio_url}` : null
-        assistantMessage.isProcessing = false
-        assistantMessage.processingTimes = {
-          llm_time: result.processing_times.llm_time,
-          tts_time: result.processing_times.tts_time,
-          total_time: result.processing_times.total_time
-        }
-      }
-
-      // 滾動到底部
-      await nextTick()
-      scrollToBottom()
-
-    } else {
-      throw new Error('發送訊息失敗')
+    // 計算總處理時間
+    const totalEndTime = performance.now()
+    const totalTime = ((totalEndTime - totalStartTime) / 1000).toFixed(3) + 's'
+    
+    // 更新助理訊息的總處理時間
+    const finalAssistantMessage = chatHistory.find(msg => msg.id === assistantMessageId)
+    if (finalAssistantMessage && finalAssistantMessage.processingTimes) {
+      finalAssistantMessage.processingTimes.total_time = totalTime
     }
 
   } catch (error) {
@@ -754,15 +840,17 @@ const formatDuration = (seconds) => {
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 1px;
+  padding-bottom: 10px;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  margin-bottom: 100px;
 }
 
 .chat-bottom-spacer {
-  height: 120px;
+  height: 0px;
   flex-shrink: 0;
 }
 
@@ -879,6 +967,20 @@ const formatDuration = (seconds) => {
   align-items: center;
   margin-left: 8px;
   color: #6b7280;
+}
+
+.tts-progress-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  border-radius: 6px;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .spinning {
@@ -1115,6 +1217,12 @@ const formatDuration = (seconds) => {
     left: -280px;
   }
   
+  .chat-messages {
+    padding: 16px;
+    padding-bottom: 120px;
+    margin-bottom: 100px; 
+  }
+
   .floating-input {
     left: 0;
     padding: 0 16px 16px;
@@ -1122,10 +1230,6 @@ const formatDuration = (seconds) => {
   
   .floating-input.sidebar-collapsed {
     left: 0;
-  }
-  
-  .chat-messages {
-    padding: 16px;
   }
   
   .message-content {
