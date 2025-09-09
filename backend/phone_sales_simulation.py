@@ -308,8 +308,8 @@ class PhoneSalesSimulator:
             return previous_row[-1]
         
         # 先去除標點符號
-        cleaned_original = remove_punctuation(original)
-        cleaned_transcribed = remove_punctuation(transcribed)
+        cleaned_original = remove_punctuation(original).lower()
+        cleaned_transcribed = remove_punctuation(transcribed).lower()
         
         # 如果去除標點後都為空，則返回100%準確度
         if not cleaned_original and not cleaned_transcribed:
