@@ -4,7 +4,7 @@
       <!-- Sidebar -->
       <div class="sidebar">
         <div class="sidebar-header">
-          <h2>即時對話機器人</h2>
+          <h2>金控數科 語音對話機器人</h2>
         </div>
         
         <nav class="sidebar-nav">
@@ -17,7 +17,7 @@
             :title="isSimulationRunning ? '電話銷售模擬進行中，無法切換到語音對話' : ''"
           >
             <MessageCircle :size="20" />
-            <span>語音對話</span>
+            <span>智慧語音助手</span>
           </div>
           
           <div 
