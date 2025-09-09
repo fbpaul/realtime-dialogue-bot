@@ -29,6 +29,26 @@
           </div>
         </nav>
         
+        <!-- 操作教學 -->
+        <div class="help-section">
+          <div class="help-title">
+            <span>操作教學</span>
+          </div>
+          <div class="help-content">
+            <p class="help-subtitle">若要在Google Chrome啟用語音服務，請新增信任網站：</p>
+            <ol class="help-steps">
+              <li>
+                前往 <code>chrome://flags/</code><br>
+                搜尋 "Insecure origins treated as secure" 改成 <strong>Enable</strong>
+              </li>
+              <li>
+                前往 <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code><br>
+                輸入本網址 (若有多網址則用逗號隔開)
+              </li>
+            </ol>
+          </div>
+        </div>
+        
         <div class="sidebar-footer">
           <div class="version-info">
             <span>v2.0</span>
@@ -154,6 +174,56 @@ body {
   font-weight: 500;
 }
 
+.help-section {
+  padding: 16px 20px;
+  border-top: 1px solid #334155;
+  border-bottom: 1px solid #334155;
+  background: #0f172a;
+}
+
+.help-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.help-content {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.help-subtitle {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+.help-steps {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.help-steps li {
+  margin-bottom: 8px;
+  color: #94a3b8;
+}
+
+.help-steps code {
+  background: #1e293b;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #60a5fa;
+}
+
+.help-steps strong {
+  color: #10b981;
+  font-weight: 600;
+}
+
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid #334155;
@@ -213,6 +283,10 @@ body {
   }
   
   .nav-item span {
+    display: none;
+  }
+  
+  .help-section {
     display: none;
   }
   
