@@ -241,39 +241,39 @@ watch(isRunning, (newValue) => {
 const salesDialoguePrompts = [
   {
     role: "salesperson",
-    prompt: "你是一位專業的保險銷售員，名叫小王，正在進行電話銷售。請用友善但專業的語調打電話給客戶，介紹自己和你們公司的醫療保險產品。記住這是對話的開始，要自然地開場。回覆要簡潔自然，大約30-50字。"
+    prompt: "你是一位專業的台北富邦銀行電銷專員，名叫小王，正在進行電話銷售。請用友善但專業的語調打電話給客戶，介紹自己和你們公司的信貸產品。記住這是對話的開始，要自然地開場。回覆要簡潔自然，大約30-50字。"
   },
   {
     role: "customer",
-    prompt: "你是一位30歲的上班族李先生，剛接到保險銷售電話。你對醫療保險有些基本了解，但對電話銷售有些戒心。請根據銷售員的介紹給出自然的回應，可以表現出一些興趣但也有疑慮。回覆要簡潔，大約20-40字。"
+    prompt: "你是一位30歲的上班族李先生，剛接到信貸銷售電話。你對信貸產品有些基本了解，但對電話銷售有些戒心。請根據銷售員的介紹給出自然的回應，可以表現出一些興趣但也有疑慮。回覆要簡潔，大約20-40字。"
   },
   {
     role: "salesperson", 
-    prompt: "根據客戶的回應，請介紹你們醫療保險產品的主要優勢，如保障範圍廣、理賠快速、保費合理等。要針對客戶的疑慮給出回應，語調要有說服力但不強硬。回覆大約40-60字。"
+    prompt: "根據客戶的回應，請介紹你們信貸產品的主要優勢，如利率優惠、審核快速、彈性還款等。要針對客戶的疑慮給出回應，語調要有說服力但不強硬。回覆大約40-60字。"
   },
   {
     role: "customer",
-    prompt: "你對產品有些興趣，但作為謹慎的消費者，想了解更多具體細節，如每月保費多少、理賠條件、等待期等。請根據之前的對話內容提出具體問題。回覆大約30-50字。"
+    prompt: "你對產品有些興趣，但作為謹慎的消費者，想了解更多具體細節，如每月還款多少、利率、手續費等。請根據之前的對話內容提出具體問題。回覆大約30-50字。"
   },
   {
     role: "salesperson",
-    prompt: "客戶詢問了具體的產品細節，請提供專業的保費資訊和理賠條件說明。要針對客戶提出的具體問題給出回答，展現專業知識並建立信任。回覆大約50-70字。"
+    prompt: "客戶詢問了具體的產品細節，請提供專業的還款資訊和利率說明。要針對客戶提出的具體問題給出回答，展現專業知識並建立信任。回覆大約50-70字。"
   },
   {
     role: "customer", 
-    prompt: "聽了銷售員的詳細介紹，你覺得產品還不錯，但需要時間考慮，想跟配偶討論一下。請根據前面的對話表現出認真考慮但不急於決定的態度。回覆大約30-40字。"
+    prompt: "聽了銷售員的詳細介紹，你覺得產品還不錯，但需要時間考慮，想跟家人討論一下。請根據前面的對話表現出認真考慮但不急於決定的態度。回覆大約30-40字。"
   },
   {
     role: "salesperson",
-    prompt: "客戶需要考慮時間，這很正常。請提供一些促進成交的誘因，如本月限時優惠、免費健康檢查等額外服務，但要保持專業不能太推銷。要尊重客戶需要討論的想法。回覆大約40-60字。"
+    prompt: "客戶需要考慮時間，這很正常。請提供一些促進成交的誘因，如本月限時優惠、手續費折抵等額外服務，但要保持專業不能太推銷。要尊重客戶需要討論的想法。回覆大約40-60字。"
   },
   {
     role: "customer",
-    prompt: "你對優惠有興趣，但還是有些擔心，想比較其他保險公司的類似產品，或者想了解是否有更便宜的方案。表現出精明消費者的態度，根據對話內容提出合理疑問。回覆大約30-50字。"
+    prompt: "你對優惠有興趣，但還是有些擔心，想比較其他銀行的類似產品，或者想了解是否有更便宜的方案。表現出精明消費者的態度，根據對話內容提出合理疑問。回覆大約30-50字。"
   },
   {
     role: "salesperson",
-    prompt: "客戶想比較其他產品這很正常，請專業地強調你們公司的獨特優勢和競爭力，比如服務品質、理賠速度、網點覆蓋等。要尊重客戶的決定過程，不要過於強勢。回覆大約50-60字。"
+    prompt: "客戶想比較其他產品這很正常，請專業地強調你們公司的獨特優勢和競爭力，比如服務品質、撥款速度、後續客服等。要尊重客戶的決定過程，不要過於強勢。回覆大約50-60字。"
   },
   {
     role: "customer",
@@ -408,29 +408,72 @@ ${currentPrompt}
 請直接開始你的回應：`
 }
 
-const calculateAccuracy = (original, transcribed) => {
-  if (!original || !transcribed) return 0
+// 移除文字中的所有標點符號（全型和半型）
+const removePunctuation = (text) => {
+  if (!text) return ''
   
-  // 簡化的準確度計算
-  const cleanOriginal = original.replace(/[^\w\s]/g, '').toLowerCase()
-  const cleanTranscribed = transcribed.replace(/[^\w\s]/g, '').toLowerCase()
+  // 移除全型和半型標點符號，保留中文字符、英文字母、數字和空白
+  return text
+    .replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, '') // 移除全型標點符號
+    .replace(/[^\w\s\u4e00-\u9fff]/g, '') // 移除半型標點符號，保留中文字符
+    .replace(/\s+/g, ' ') // 將多個空白合併為單個空白
+    .trim()
+    .toLowerCase()
+}
+
+// 計算 Levenshtein 距離（編輯距離）
+const calculateLevenshteinDistance = (str1, str2) => {
+  const len1 = str1.length
+  const len2 = str2.length
   
-  if (cleanOriginal === cleanTranscribed) return 100
+  // 創建二維數組來存儲距離
+  const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(null))
   
-  // 使用簡單的字符匹配計算準確度
-  const maxLength = Math.max(cleanOriginal.length, cleanTranscribed.length)
-  if (maxLength === 0) return 100
+  // 初始化第一行和第一列
+  for (let i = 0; i <= len1; i++) {
+    matrix[i][0] = i
+  }
+  for (let j = 0; j <= len2; j++) {
+    matrix[0][j] = j
+  }
   
-  let matches = 0
-  const minLength = Math.min(cleanOriginal.length, cleanTranscribed.length)
-  
-  for (let i = 0; i < minLength; i++) {
-    if (cleanOriginal[i] === cleanTranscribed[i]) {
-      matches++
+  // 填充矩陣
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,     // 刪除
+        matrix[i][j - 1] + 1,     // 插入
+        matrix[i - 1][j - 1] + cost // 替換
+      )
     }
   }
   
-  return Math.round((matches / maxLength) * 100)
+  return matrix[len1][len2]
+}
+
+// 使用 Levenshtein 距離計算 STT 準確度
+const calculateAccuracy = (original, transcribed) => {
+  if (!original || !transcribed) return 0
+  
+  // 清理文字，移除標點符號
+  const cleanOriginal = removePunctuation(original)
+  const cleanTranscribed = removePunctuation(transcribed)
+  
+  // 如果清理後的文字完全相同，準確度為 100%
+  if (cleanOriginal === cleanTranscribed) return 100
+  
+  // 如果其中一個為空，準確度為 0%
+  if (cleanOriginal.length === 0 || cleanTranscribed.length === 0) return 0
+  
+  // 計算編輯距離
+  const editDistance = calculateLevenshteinDistance(cleanOriginal, cleanTranscribed)
+  
+  // 計算準確度：1 - (編輯距離 / 較長字串的長度)
+  const maxLength = Math.max(cleanOriginal.length, cleanTranscribed.length)
+  const accuracy = Math.max(0, (1 - editDistance / maxLength) * 100)
+  
+  return Math.round(accuracy)
 }
 
 // 主要模擬函數
