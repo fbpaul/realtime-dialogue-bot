@@ -81,6 +81,7 @@ chat:
   use_llm_tools: true  # 是否使用 llm_tools/configs/models.yaml
   llm_tools_config: "./llm_tools/configs/models.yaml"
   llm_tools_model: "Qwen2.5-32B-Instruct-GPTQ-Int4"  # llm_tools 中的模型名
+  system_prompt: "你扮演一個金融業的客戶，跟理專自然的對話，用簡潔且口語化的方式回覆。"
 
 # 檔案路徑配置
 paths:

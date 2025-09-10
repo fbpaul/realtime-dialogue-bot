@@ -24,10 +24,11 @@ class ChatService:
         self.use_llm_tools = chat_config.get("use_llm_tools", self.use_llm_tools)
         self.device = chat_config.get("device", "auto")
         self.llm_tools_device = chat_config.get("llm_tools_device", self.device)
-        print(f"Chat 配置載入: use_llm_tools={self.use_llm_tools}, device={self.device}, llm_tools_device={self.llm_tools_device}")
-        
-    async def initialize_llm(self, use_llm_tools: bool = None, 
-                           llm_tools_config: str = None, 
+        self.system_prompt = chat_config.get("system_prompt", "你是一個親切友善並善於誇讚人的語音助理，會用繁體中文回答問題。請保持回覆簡潔有趣，不要講太多話，適合語音對話。")
+        print(f"Chat 配置載入: use_llm_tools={self.use_llm_tools}, device={self.device}, llm_tools_device={self.llm_tools_device}, system_prompt={self.system_prompt}")
+
+    async def initialize_llm(self, use_llm_tools: bool = None,
+                           llm_tools_config: str = None,
                            llm_tools_model: str = None,
                            local_model_path: str = None):
         """初始化 LLM 聊天服務
@@ -134,7 +135,7 @@ class ChatService:
             response, _ = self.llm_chat.chat(
                 query=user_message,
                 history=llm_history,
-                system="你是一個親切友善並善於誇讚人的語音助理，會用繁體中文回答問題。請保持回覆簡潔有趣，不要講太多話，適合語音對話。"
+                system=self.system_prompt,
             )
             
             return response.strip()

@@ -49,6 +49,30 @@
           </div>
         </div>
         
+        <!-- 後端狀態檢查 -->
+        <div class="status-section">
+          <div class="status-title">
+            <span>後端服務狀態</span>
+            <button class="refresh-btn" @click="checkBackendStatus" :disabled="isCheckingStatus">
+              <RotateCcw :size="12" :class="{ spinning: isCheckingStatus }" />
+            </button>
+          </div>
+          <div class="status-list">
+            <div class="status-item">
+              <div class="status-indicator" :class="{ online: sttStatus, offline: !sttStatus }"></div>
+              <span class="status-label">STT 語音識別</span>
+            </div>
+            <div class="status-item">
+              <div class="status-indicator" :class="{ online: llmStatus, offline: !llmStatus }"></div>
+              <span class="status-label">LLM 對話模型</span>
+            </div>
+            <div class="status-item">
+              <div class="status-indicator" :class="{ online: ttsStatus, offline: !ttsStatus }"></div>
+              <span class="status-label">TTS 語音合成</span>
+            </div>
+          </div>
+        </div>
+        
         <div class="sidebar-footer">
           <div class="version-info">
             <span>v2.0</span>
@@ -69,13 +93,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { MessageCircle, Phone } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { MessageCircle, Phone, RotateCcw } from 'lucide-vue-next'
 import VoiceChatNew from './components/VoiceChatNew.vue'
 import PhoneSalesSimulation from './components/PhoneSalesSimulation.vue'
 
+// API 基礎地址
+const API_BASE_URL = 'http://10.204.245.170:8945'
+
 const currentView = ref('voice-chat')
 const isSimulationRunning = ref(false)
+
+// 後端狀態
+const sttStatus = ref(false)
+const llmStatus = ref(false)
+const ttsStatus = ref(false)
+const isCheckingStatus = ref(false)
 
 const switchView = (view) => {
   // 如果模擬正在運行且試圖切換到語音對話，則阻止切換
@@ -88,6 +121,36 @@ const switchView = (view) => {
 const handleSimulationStatusChange = (status) => {
   isSimulationRunning.value = status.isRunning
 }
+
+// 檢查後端狀態
+const checkBackendStatus = async () => {
+  isCheckingStatus.value = true
+  try {
+    // 檢查 STT
+    const sttResponse = await fetch(`${API_BASE_URL}/health/stt`)
+    sttStatus.value = sttResponse.ok
+
+    // 檢查 LLM
+    const llmResponse = await fetch(`${API_BASE_URL}/health/llm`)  
+    llmStatus.value = llmResponse.ok
+
+    // 檢查 TTS
+    const ttsResponse = await fetch(`${API_BASE_URL}/health/tts`)
+    ttsStatus.value = ttsResponse.ok
+  } catch (error) {
+    console.error('檢查服務狀態失敗:', error)
+    sttStatus.value = false
+    llmStatus.value = false
+    ttsStatus.value = false
+  } finally {
+    isCheckingStatus.value = false
+  }
+}
+
+// 初始化
+onMounted(async () => {
+  await checkBackendStatus()
+})
 </script>
 
 <style>
@@ -224,6 +287,91 @@ body {
   font-weight: 600;
 }
 
+.status-section {
+  padding: 16px 20px;
+  border-top: 1px solid #334155;
+  border-bottom: 1px solid #334155;
+  background: #0f172a;
+}
+
+.status-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.refresh-btn {
+  background: none;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: all 0.2s;
+}
+
+.status-indicator.online {
+  background: #10b981;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.4);
+}
+
+.status-indicator.offline {
+  background: #ef4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+}
+
+.status-label {
+  font-weight: 500;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid #334155;
@@ -287,6 +435,10 @@ body {
   }
   
   .help-section {
+    display: none;
+  }
+  
+  .status-section {
     display: none;
   }
   
