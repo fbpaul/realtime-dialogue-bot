@@ -58,7 +58,7 @@
       
       <div 
         v-for="(message, index) in chatHistory" 
-        :key="index" 
+        :key="`${message.id || message.timestamp}-${index}-${forceUpdateKey}`" 
         class="message-wrapper"
       >
         <div :class="['message', message.type]">
@@ -195,10 +195,16 @@ const isProcessing = ref(false)
 const recordingDuration = ref(0)
 const inputText = ref('')
 const processingStatus = ref('')
-const chatHistory = reactive([])
+const chatHistory = ref([])
 const chatMessagesRef = ref(null)
 const textareaRef = ref(null)
 const ttsEnabled = ref(true) // 控制是否啟用TTS
+const forceUpdateKey = ref(0) // 強制更新鍵
+
+// 強制更新聊天歷史顯示
+const forceUpdateChatHistory = () => {
+  forceUpdateKey.value++
+}
 
 // 計算屬性
 const allServicesOnline = computed(() => {
@@ -258,7 +264,7 @@ const playAudio = (audioUrl) => {
 
 // 開始新對話
 const startNewConversation = () => {
-  chatHistory.length = 0
+  chatHistory.value = []
   inputText.value = ''
 }
 
@@ -322,6 +328,9 @@ const stopRecording = () => {
 
 // 處理音頻輸入
 const handleAudioInput = async (audioBlob) => {
+  // 防止重複處理
+  if (isProcessing.value) return
+  
   const audioUrl = URL.createObjectURL(audioBlob)
   
   // 添加用戶音頻消息
@@ -329,11 +338,12 @@ const handleAudioInput = async (audioBlob) => {
     type: 'user',
     text: '🎤 語音訊息',
     timestamp: Date.now(),
+    id: `user-${Date.now()}-${Math.random()}`,
     audioUrl: audioUrl,
     isProcessing: true
   }
   
-  chatHistory.push(userMessage)
+  chatHistory.value.push(userMessage)
   scrollToBottom()
   
   try {
@@ -352,8 +362,8 @@ const handleAudioInput = async (audioBlob) => {
       stt_time: `${sttFrontendTime}ms`
     }
     
-    // 調用LLM和TTS
-    await processLLMAndTTS(sttResult.transcription, sttFrontendTime)
+    // 調用LLM
+    await processLLMResponse(sttResult.transcription, sttFrontendTime)
     
   } catch (error) {
     console.error('處理音頻失敗:', error)
@@ -368,6 +378,9 @@ const handleAudioInput = async (audioBlob) => {
 const sendTextMessage = async () => {
   if (!inputText.value.trim() || isProcessing.value) return
   
+  // 立即設置處理狀態，防止重複調用
+  isProcessing.value = true
+  
   const messageText = inputText.value.trim()
   inputText.value = ''
   
@@ -380,17 +393,16 @@ const sendTextMessage = async () => {
   const userMessage = {
     type: 'user',
     text: messageText,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    id: `user-${Date.now()}-${Math.random()}`
   }
   
-  chatHistory.push(userMessage)
+  chatHistory.value.push(userMessage)
   scrollToBottom()
   
   try {
-    isProcessing.value = true
-    
-    // 直接調用LLM和TTS（文字輸入沒有STT時間）
-    await processLLMAndTTS(messageText, 0)
+    // 直接調用LLM（文字輸入沒有STT時間）
+    await processLLMResponse(messageText, 0)
     
   } catch (error) {
     console.error('處理文字失敗:', error)
@@ -399,18 +411,19 @@ const sendTextMessage = async () => {
   }
 }
 
-// 處理LLM和TTS
-const processLLMAndTTS = async (userText, sttTime = 0) => {
+// 處理LLM回應
+const processLLMResponse = async (userText, sttTime = 0) => {
   const assistantMessage = {
     type: 'assistant',
     text: '',
     timestamp: Date.now(),
+    id: `assistant-${Date.now()}-${Math.random()}`, // 添加唯一 ID
     isProcessing: true,
     showTtsProgress: false,
     processingTimes: {}
   }
   
-  chatHistory.push(assistantMessage)
+  chatHistory.value.push(assistantMessage)
   scrollToBottom()
   
   try {
@@ -420,39 +433,103 @@ const processLLMAndTTS = async (userText, sttTime = 0) => {
     const llmEndTime = performance.now()
     const llmFrontendTime = Math.round(llmEndTime - llmStartTime)
     
+    // 立即顯示LLM回應
     assistantMessage.text = llmResult.response
     assistantMessage.processingTimes.llm_time = `${llmFrontendTime}ms`
+    assistantMessage.isProcessing = false
     
     scrollToBottom()
     
-    let ttsFrontendTime = 0
-    // 如果啟用TTS，則生成語音
+    // 如果啟用TTS，則異步生成語音（不阻塞顯示）
     if (ttsEnabled.value) {
-      assistantMessage.showTtsProgress = true
-      scrollToBottom()
-      
-      const ttsStartTime = performance.now()
-      const ttsResult = await generateTTS(llmResult.response)
-      const ttsEndTime = performance.now()
-      ttsFrontendTime = Math.round(ttsEndTime - ttsStartTime)
-      
-      assistantMessage.audioUrl = ttsResult.audioUrl
-      assistantMessage.processingTimes.tts_time = `${ttsFrontendTime}ms`
-      assistantMessage.showTtsProgress = false
+      // 不使用 await，讓 TTS 真正異步執行
+      processTTSResponse(assistantMessage, llmResult.response, sttTime, llmFrontendTime)
+    } else {
+      // 如果不需要TTS，直接計算總時間
+      const totalTime = sttTime + llmFrontendTime
+      assistantMessage.processingTimes.total_time = `${totalTime}ms`
     }
     
-    // 計算總時間
-    const totalTime = sttTime + llmFrontendTime + ttsFrontendTime
-    assistantMessage.processingTimes.total_time = `${totalTime}ms`
-    
+  } catch (error) {
+    console.error('LLM處理失敗:', error)
+    assistantMessage.text = '抱歉，我現在無法回應您的問題。'
     assistantMessage.isProcessing = false
+  }
+}
+
+// 處理TTS回應（異步執行）
+const processTTSResponse = async (assistantMessage, responseText, sttTime = 0, llmTime = 0) => {
+  try {
+    // 顯示TTS處理進度
+    assistantMessage.showTtsProgress = true
+    await nextTick()
+    scrollToBottom()
+    
+    console.log('開始TTS處理...', assistantMessage.id)
+    
+    const ttsStartTime = performance.now()
+    const ttsResult = await generateTTS(responseText)
+    const ttsEndTime = performance.now()
+    const ttsFrontendTime = Math.round(ttsEndTime - ttsStartTime)
+    
+    console.log('TTS處理完成，準備更新UI...', assistantMessage.id)
+    
+    // 使用 ID 找到對應的消息在數組中的索引
+    const messageIndex = chatHistory.value.findIndex(msg => msg.id === assistantMessage.id)
+    if (messageIndex !== -1) {
+      console.log('找到消息索引:', messageIndex, '消息類型:', chatHistory.value[messageIndex].type)
+      
+      // 使用 Vue 的響應式更新方式，創建新對象
+      const updatedMessage = {
+        ...chatHistory.value[messageIndex],
+        showTtsProgress: false,
+        audioUrl: ttsResult.audioUrl,
+        processingTimes: {
+          ...chatHistory.value[messageIndex].processingTimes,
+          tts_time: `${ttsFrontendTime}ms`,
+          total_time: `${sttTime + llmTime + ttsFrontendTime}ms`
+        }
+      }
+      
+      // 直接替換數組中的對象
+      chatHistory.value[messageIndex] = updatedMessage
+      
+      console.log('UI更新完成，showTtsProgress:', updatedMessage.showTtsProgress)
+      console.log('更新後的消息對象:', JSON.stringify(updatedMessage, null, 2))
+      console.log('chatHistory 數組狀態:', chatHistory.value.length)
+      
+      // 強制更新顯示
+      forceUpdateChatHistory()
+    } else {
+      console.error('無法找到對應的消息:', assistantMessage.id)
+    }
+    
+    await nextTick()
     scrollToBottom()
     
   } catch (error) {
-    console.error('LLM/TTS處理失敗:', error)
-    assistantMessage.text = '抱歉，我現在無法回應您的問題。'
-    assistantMessage.isProcessing = false
-    assistantMessage.showTtsProgress = false
+    console.error('TTS處理失敗:', error)
+    // TTS失敗時，仍然計算總時間（不包含TTS時間）
+    const totalTime = sttTime + llmTime
+    
+    const messageIndex = chatHistory.value.findIndex(msg => msg.id === assistantMessage.id)
+    if (messageIndex !== -1) {
+      const updatedMessage = {
+        ...chatHistory.value[messageIndex],
+        showTtsProgress: false,
+        processingTimes: {
+          ...chatHistory.value[messageIndex].processingTimes,
+          total_time: `${totalTime}ms`
+        }
+      }
+      chatHistory.value[messageIndex] = updatedMessage
+      
+      // 強制更新顯示
+      forceUpdateChatHistory()
+    }
+    
+    await nextTick()
+    scrollToBottom()
   }
 }
 

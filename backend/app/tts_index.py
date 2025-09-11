@@ -42,11 +42,14 @@ class TTSIndexService:
         self.model_dir = tts_config.get("model_dir", self.model_dir)
         self.cfg_path = tts_config.get("cfg_path", self.cfg_path)
         
+        # 新增自動清理選項
+        self.auto_cleanup = tts_config.get("auto_cleanup", True)
+        
         # 從配置文件讀取預設語者設定
         default_speaker_config = tts_config.get("default_speaker", {})
         self.default_speaker_path = default_speaker_config.get("audio_path", None)
         
-        print(f"TTS Index 配置載入: device={self.device}, model_dir={self.model_dir}")
+        print(f"TTS Index 配置載入: device={self.device}, model_dir={self.model_dir}, auto_cleanup={self.auto_cleanup}")
         if self.default_speaker_path:
             print(f"預設語者: {self.default_speaker_path}")
 
@@ -211,6 +214,16 @@ class TTSIndexService:
             print(f"音檔大小: {len(audio_data)} bytes")
             print(f"音檔儲存於: {output_path}")
             
+            # 根據配置決定是否清理臨時檔案
+            if self.auto_cleanup:
+                try:
+                    os.remove(output_path)
+                    print(f"已自動清理臨時檔案: {output_path}")
+                except Exception as cleanup_error:
+                    print(f"清理臨時檔案失敗: {cleanup_error}")
+            else:
+                print(f"臨時檔案保留: {output_path}")
+            
             return audio_data
             
         except Exception as e:
@@ -221,8 +234,8 @@ class TTSIndexService:
         """使用指定語者檔案合成語音"""
         return await self.synthesize(text, speaker_voice_path=speaker_file_path)
     
-    async def synthesize_to_file(self, text: str, speaker_voice_path: str = None, speaker_id: str = None) -> str:
-        """合成語音並返回檔案路徑（如果需要保留檔案）"""
+    async def synthesize_to_file(self, text: str, speaker_voice_path: str = None, speaker_id: str = None, keep_file: bool = True) -> str:
+        """合成語音並返回檔案路徑（可選擇是否保留檔案）"""
         if not self.is_ready():
             raise Exception("IndexTTS 尚未初始化")
         
@@ -272,6 +285,35 @@ class TTSIndexService:
             print(f"IndexTTS 語音合成到檔案失敗: {e}")
             raise e
     
+    def cleanup_old_files(self, max_age_hours: int = 24):
+        """清理指定時間之前的舊檔案"""
+        try:
+            import time
+            current_time = time.time()
+            max_age_seconds = max_age_hours * 3600
+            
+            if not os.path.exists(self.output_dir):
+                return
+            
+            cleaned_count = 0
+            for filename in os.listdir(self.output_dir):
+                if filename.startswith("indextts_output_") and filename.endswith(".wav"):
+                    file_path = os.path.join(self.output_dir, filename)
+                    file_age = current_time - os.path.getmtime(file_path)
+                    
+                    if file_age > max_age_seconds:
+                        try:
+                            os.remove(file_path)
+                            cleaned_count += 1
+                            print(f"清理舊檔案: {filename}")
+                        except Exception as e:
+                            print(f"清理檔案失敗 {filename}: {e}")
+            
+            print(f"共清理了 {cleaned_count} 個舊檔案")
+            
+        except Exception as e:
+            print(f"清理舊檔案過程失敗: {e}")
+
     def cleanup(self):
         """清理資源"""
         try:

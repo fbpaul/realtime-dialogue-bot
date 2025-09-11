@@ -43,6 +43,7 @@ tts:
     model_dir: "./models/IndexTTS-1.5/"
     cfg_path: "./models/IndexTTS-1.5/config.yaml"
     device: "cuda:0"  # 可選值: "cuda:0", "cuda:1", "cpu"
+    auto_cleanup: true  # 自動清理生成的臨時檔案
     # 預設參考語者設定
     default_speaker:
       audio_path: "./voices/zh-Xinran_woman.wav"  # 使用 voices 目錄中的中文語者

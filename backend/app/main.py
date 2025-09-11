@@ -366,6 +366,44 @@ async def text_to_speech_conversation(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"對話 TTS 處理錯誤: {str(e)}")
 
+@app.post("/tts/cleanup", summary="清理 TTS 臨時檔案")
+async def cleanup_tts_files(max_age_hours: int = 24):
+    """清理 TTS 生成的臨時檔案"""
+    if not tts_service:
+        raise HTTPException(status_code=503, detail="TTS 服務未啟用")
+    
+    try:
+        if tts_provider == "index" and hasattr(tts_service, 'cleanup_old_files'):
+            tts_service.cleanup_old_files(max_age_hours)
+            return {
+                "success": True,
+                "message": f"成功清理 {max_age_hours} 小時前的 TTS 臨時檔案",
+                "provider": tts_provider
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"TTS 提供者 {tts_provider} 不支援檔案清理功能",
+                "provider": tts_provider
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"清理 TTS 檔案失敗: {str(e)}")
+
+@app.get("/tts/config", summary="獲取 TTS 配置信息")
+async def get_tts_config():
+    """獲取當前 TTS 配置信息"""
+    if not tts_service:
+        raise HTTPException(status_code=503, detail="TTS 服務未啟用")
+    
+    try:
+        config_info = {
+            "provider": tts_provider,
+            "auto_cleanup": getattr(tts_service, 'auto_cleanup', False) if tts_provider == "index" else "N/A"
+        }
+        return config_info
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"獲取 TTS 配置失敗: {str(e)}")
+
 @app.post("/chat")
 async def chat_with_bot(
     text: str = Form(...),

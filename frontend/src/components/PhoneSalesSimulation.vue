@@ -185,6 +185,10 @@
             <span>{{ finalReport.stt.avgTime }}ms</span>
           </div>
           <div class="stat-row">
+            <span>平均轉譯速度:</span>
+            <span>{{ finalReport.stt.avgSpeed }} 字/秒</span>
+          </div>
+          <div class="stat-row">
             <span>平均準確度:</span>
             <span>{{ finalReport.stt.avgAccuracy }}%</span>
           </div>
@@ -617,9 +621,11 @@ const generateFinalReport = (metrics, totalTime) => {
   const totalChars = metrics.charCounts.reduce((a, b) => a + b, 0)
   const totalLLMTime = metrics.llmTimes.reduce((a, b) => a + b, 0) / 1000
   const totalTTSTime = metrics.ttsTimes.reduce((a, b) => a + b, 0) / 1000
+  const totalSTTTime = metrics.sttTimes.reduce((a, b) => a + b, 0) / 1000
   
   const llmSpeed = totalLLMTime > 0 ? Math.round(totalChars / totalLLMTime) : 0
   const ttsSpeed = totalTTSTime > 0 ? Math.round(totalChars / totalTTSTime) : 0
+  const sttSpeed = totalSTTTime > 0 ? Math.round(totalChars / totalSTTTime) : 0
   
   finalReport.value = {
     completedRounds: conversationHistory.length,
@@ -635,7 +641,8 @@ const generateFinalReport = (metrics, totalTime) => {
     },
     stt: {
       avgTime: avgSTTTime,
-      avgAccuracy: avgAccuracy
+      avgAccuracy: avgAccuracy,
+      avgSpeed: sttSpeed
     }
   }
 }
