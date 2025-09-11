@@ -8,7 +8,7 @@ import shutil
 from app.config import config
 
 # 添加 IndexTTS 路徑
-sys.path.append('/app/index-tts')
+sys.path.append('./index-tts')
 
 class TTSIndexService:
     def __init__(self):

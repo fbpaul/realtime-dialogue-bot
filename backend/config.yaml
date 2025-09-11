@@ -2,8 +2,10 @@
 api:
   title: "Realtime Dialogue API"
   version: "1.0.0"
-  host: "0.0.0.0"
-  port: 8000
+  host: "10.204.245.170"
+  port: 8945
+  # host: "0.0.0.0"
+  # port: 8000
   cors:
     allow_origins: ["*"]  # 生產環境請改為具體的前端網址
     allow_credentials: true

@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from app.stt import STTService
-from app.tts_vibe import TTSVibeService
+# from app.tts_vibe import TTSVibeService
 from app.tts_breezy import TTSBreezyService
 from app.tts_index import TTSIndexService
 from app.tts_spark import TTSSparkService

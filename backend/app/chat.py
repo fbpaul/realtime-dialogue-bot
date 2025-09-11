@@ -6,7 +6,7 @@ import asyncio
 from app.config import config
 
 # 加入 llm_tools 路徑
-sys.path.append('/app/llm_tools')
+sys.path.append('./llm_tools')
 
 class ChatService:
     def __init__(self):
