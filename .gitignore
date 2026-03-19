@@ -1,3 +1,6 @@
+# macOS
+.DS_Store
+
 # folders
 repo_ref
 backend/models
