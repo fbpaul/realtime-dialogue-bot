@@ -1,20 +1,201 @@
-# 🎙️ Realtime Dialogue Bot
+<p align="center">
+  <img src="assets/chat_demo.png" width="900px" style="vertical-align:middle;">
+</p>
 
+<div align="center">
 結合 STT（語音轉文字）、TTS（文字轉語音）與 LLM（大型語言模型），實現即時的語音對話機器人系統。
-![聊天界面展示](assets/chat_demo.png)
 
-## ✨ 主要功能
+[English](README_EN.md) | [中文](README.md)
 
-- 🎤 **即時語音識別**：支持高精度的中文語音轉文字
-- 🧠 **智能對話**：整合大型語言模型，提供自然流暢的對話體驗
-- 🔊 **多引擎語音合成**：支援 BreezyVoice、VibeVoice、IndexTTS、Spark-TTS 四種 TTS 引擎
-- 🎭 **語者克隆**：支援自定義語者音檔進行語音克隆
-- 💻 **現代化 UI**：Vue.js 前端，響應式設計，支援桌面和移動端
-- ⚡ **高性能優化**：CUDA 加速、模型緩存、混合精度推論
+</div>
 
-## 🏗️ 專案架構
+---
 
-### 整體目錄結構
+## 1. 專案介紹
+
+**Realtime Dialogue Bot** 整合 **語音轉文字 (STT)**、**文字轉語音 (TTS)** 與 **大型語言模型 (LLM)** 技術，打造**智能語音對話系統**，實現自然、即時的語音互動體驗。
+
+**核心工作流程：**
+```
+語音輸入 → STT → LLM 處理 → TTS → 語音輸出
+```
+
+系統支援多種 TTS 引擎、語音克隆功能，並提供現代化的網頁界面，帶來無縫的使用體驗。
+
+---
+
+## 2. 支援功能與引擎
+
+| 功能特色                      | BreezyVoice | VibeVoice | IndexTTS | Spark-TTS |
+| ---------------------------- |:---:|:---:|:---:|:---:|
+| **即時合成**                  | ⚠️ | ✅ | ✅ | ✅ |
+| **語音克隆**                  | ✅ | ✅ | ✅ | ✅ |
+| **中國口音**                  | 低 | 中等 | 重 | 重 |
+| **合成速度 (RTF)**            | 1.5-3.0 | ~0.82 | ~0.45 | ~1.0 |
+| **音質表現**                  | 高 | 高 | 中等 | 高 |
+| **穩定性**                    | ⚠️ | ✅ | ✅ | ✅ |
+
+**性能說明：**
+- **IndexTTS**: 最快的合成速度，適合即時應用
+- **VibeVoice**: 速度與品質平衡良好，需要高品質語音樣本
+- **Spark-TTS**: 接近即時性能，音質表現佳
+- **BreezyVoice**: 品質優秀但可能出現音頻跳針導致生成時間過長
+
+---
+
+## 3. 安裝需求
+
+### 環境要求
+- Python 3.8+
+- Node.js 16+
+- CUDA 11.8+ (推薦使用 GPU)
+- Docker & Podman (容器化部署)
+
+### 快速設置
+```bash
+# Clone 專案
+git clone https://github.com/fbpaul/realtime-dialogue-bot.git
+cd realtime-dialogue-bot
+
+# 後端設置 (詳細說明請參考 backend/README.md)
+cd backend
+pip install -r requirements.txt
+
+# 前端設置 (詳細說明請參考 frontend/README.md)  
+cd frontend
+npm install
+```
+
+---
+
+## 4. 使用說明
+
+### 4.1 後端服務
+
+啟動 FastAPI 後端服務器：
+
+```bash
+cd backend
+python start_server.py
+```
+
+後端提供以下 API 端點：
+- `/chat` - LLM 對話端點
+- `/stt` - 語音轉文字轉換
+- `/tts/breezy` - BreezyVoice TTS 合成
+- `/tts/vibe` - VibeVoice TTS 合成
+- `/tts/index` - IndexTTS 合成
+- `/tts/spark` - Spark-TTS 合成
+
+<details>
+<summary>API 使用範例 (點擊展開)</summary>
+
+```python
+import requests
+import json
+
+# STT 範例
+with open("audio.wav", "rb") as f:
+    response = requests.post("http://localhost:8000/stt", files={"file": f})
+    text = response.json()["text"]
+    print(f"識別文字: {text}")
+
+# 聊天範例
+response = requests.post(
+    "http://localhost:8000/chat",
+    json={"message": "你好，今天天氣如何？"}
+)
+reply = response.json()["response"]
+print(f"機器人回覆: {reply}")
+
+# TTS 範例
+response = requests.post(
+    "http://localhost:8000/tts/index",
+    json={
+        "text": "您好，這是一段測試語音",
+        "speaker": "Speaker1"
+    }
+)
+with open("output.wav", "wb") as f:
+    f.write(response.content)
+```
+
+</details>
+
+---
+
+### 4.2 前端應用
+
+啟動 Vue.js 前端：
+
+```bash
+cd frontend
+npm run dev
+```
+
+前端功能包括：
+- **即時語音聊天**: 點擊說話的語音互動
+- **電話銷售模擬**: AI 驅動的銷售對話訓練
+- **多 TTS 引擎選擇**: 從 4 種不同 TTS 引擎中選擇
+- **語音克隆設置**: 上傳自訂語音樣本
+- **響應式設計**: 支援桌面和移動設備
+
+<details>
+<summary>前端功能概覽 (點擊展開)</summary>
+
+**主要組件：**
+- `VoiceChat.vue` - 主要語音互動界面
+- `PhoneSalesSimulation.vue` - 專門的銷售訓練模組
+- `useAudioRecorder.js` - 音頻錄製組合式函數
+- Pinia 狀態管理
+
+**核心特色：**
+- 基於 WebRTC 的音頻錄製
+- 即時音頻視覺化
+- 對話歷史管理
+- TTS 引擎選擇設定面板
+- 移動端響應式設計
+
+</details>
+
+---
+
+### 4.3 Docker 部署
+
+使用 Docker 部署整個系統：
+
+```bash
+# 後端部署
+cd backend
+docker-compose up -d
+
+# 前端部署
+cd frontend
+docker-compose up -d
+```
+
+<details>
+<summary>Docker 配置詳情 (點擊展開)</summary>
+
+**後端 Docker 設置：**
+- 支援 CUDA 的基礎映像檔進行 GPU 加速
+- 模型下載和緩存
+- 多階段建置優化映像檔大小
+- 健康檢查和重啟政策
+
+**前端 Docker 設置：**  
+- 基於 Nginx 的靜態檔案服務
+- 生產環境建置優化
+- 可配置的 API 端點
+- SSL/TLS 支援準備
+
+</details>
+---
+
+## 5. 系統架構
+
+### 5.1 專案結構
+
 ```
 realtime-dialogue-bot/
 ├── README.md               # 專案說明文件
@@ -68,37 +249,15 @@ realtime-dialogue-bot/
 └── repo_ref/               # 參考資料和文檔
 ```
 
-## 🚀 快速開始
+### 5.2 系統性能指標
 
-### 環境要求
-- Python 3.8+
-- Node.js 16+
-- CUDA 11.8+ (推薦使用 GPU)
-- Docker & Podman (容器化部署)
+**系統性能指標:**
+- **STT 延遲**: ~500-800ms
+- **LLM 響應**: ~600-900ms  
+- **TTS 合成**: ~2-7s (取決於引擎和文字長度)
+- **端到端延遲**: ~3-8s
 
-### 1. Clone 專案
-```bash
-git clone https://github.com/fbpaul/realtime-dialogue-bot.git
-cd realtime-dialogue-bot
-```
-
-### 2. 後端設置
-- 參照後端的 [README.md](backend/README.md)
-
-### 3. 前端設置
-- 參照前端的 [README.md](frontend/README.md)
-
-## 📊 系統性能分析
-
-### TTS 性能
-- **IndexTTS**: 最快的合成速度，平均 RTF ≈ 0.45，適合即時應用，但中國口音較重
-- **VibeVoice**: RTF ≈ 0.82，如果克隆語者音檔品質不佳，無法生成好的聲音
-- **Spark-TTS**: 近即時性能，RTF ≈ 1.0，接近實時合成，中國口音重
-- **BreezyVoice**: RTF ≈ 1.5-3.0，較低的中國口音，但會跳針，導致速度評估起來很慢 (莫名生成太長的語音)
-
-*RTF (Real Time Factor): 值越小表示合成速度越快。RTF=1.0 表示實時合成速度*
-
-### 詳細測試結果
+**詳細 TTS 性能測試結果:**
 
 基於標準測試用例的 RTF (Real Time Factor) 性能測試結果：
 
@@ -114,7 +273,6 @@ cd realtime-dialogue-bot
 | 長文字 | Speaker1 | 1.901 | 28.208s | 14.838s |
 | 長文字 | Speaker2 | 1.967 | 81.422s | 41.390s |
 | 長文字 | Speaker3 | 2.302 | 21.195s | 9.207s |
-
 #### VibeVoice 測試結果
 | 文本 | 語者 | RTF | 合成時間 | 音頻長度 |
 |------|------|-----|----------|----------|
@@ -151,27 +309,83 @@ cd realtime-dialogue-bot
 | 長文字 | Speaker1 | 1.000 | 10.476s | 10.480s |
 | 長文字 | Speaker3 | 1.002 | 8.680s | 8.660s |
 
+*RTF (Real Time Factor): 值越小表示合成速度越快。RTF=1.0 表示實時合成速度*
 
-### 系統性能指標
-- **STT 延遲**: ~500-800ms
-- **LLM 響應**: ~600-900ms  
-- **TTS 合成**: ~2-7s (取決於引擎和文字長度)
-- **端到端延遲**: ~3-8s
+---
 
+## 6. 配置指南
 
-## 📚 相關文檔
+### 6.1 後端配置
+
+編輯 `backend/config.yaml` 來自訂系統設定：
+
+```yaml
+# 模型配置
+models:
+  stt_model: "mobiuslabsgmbh/faster-whisper-large-v3-turbo"
+  llm_model: "Qwen/Qwen2.5-1.5B"
+  
+# TTS 引擎設定
+tts:
+  default_engine: "index"  # breezy, vibe, index, spark
+  voice_clone_enabled: true
+  
+# 性能設定
+performance:
+  cuda_enabled: true
+  mixed_precision: true
+  model_cache: true
+```
+
+### 6.2 語音克隆設置
+
+1. 準備語音樣本 (WAV 格式, 16kHz, 單聲道)
+2. 將樣本放置於 `backend/voices/` 目錄
+3. 在 `config.yaml` 中配置語者設定
+4. 通過 API 測試語音克隆功能
+
+---
+
+## 7. 開發指南
+
+### 7.1 新增 TTS 引擎
+
+要整合新的 TTS 引擎：
+
+1. 創建新的 TTS 服務檔案: `app/tts_newengine.py`
+2. 實現 TTS 介面
+3. 添加配置設定
+4. 在 `main.py` 中註冊端點
+5. 更新前端引擎選擇
+
+### 7.2 擴展 LLM 功能
+
+要新增 LLM 功能：
+
+1. 修改 `app/chat.py` 添加新的對話邏輯
+2. 更新 `llm_tools/configs/` 中的提示模板
+3. 如需要可添加記憶管理
+4. 使用不同模型配置進行測試
+
+---
+
+## 8. 相關文檔
 
 - [後端配置指南](backend/CONFIG_GUIDE.md)
 - [部署方式說明](backend/部署方式.md)
 - [前端開發文檔](frontend/README.md)
 - [API 文檔](http://localhost:8000/docs) (服務運行時可訪問)
 
+---
 
-## 📜 授權條款
+## 9. 授權條款
 
 本專案採用 MIT 授權條款 - 詳見 [LICENSE](LICENSE) 檔案
 
-## 👥 開發團隊
+---
+
+## 10. 開發團隊
 
 - **主要開發者**: paul.fc.tsai
 - **專案維護**: paul.fc.tsai
+- **專案倉庫**: [fbpaul/realtime-dialogue-bot](https://github.com/fbpaul/realtime-dialogue-bot)
